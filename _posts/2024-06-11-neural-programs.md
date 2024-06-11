@@ -861,7 +861,7 @@ You can also sample different values for ISED and REINFORCE and change the semir
 
 <script>
 
-</script>
+</script> 
 
 ## Evaluation
 

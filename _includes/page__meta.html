@@ -1,17 +1,17 @@
-{% assign authorCount = page.authors | size %}
+{% assign document = post | default: page %}
+{% assign authorCount = document.authors | size %}
 {% if authorCount == 0 %}
-  {% if page.author and site.data.authors[page.author] %}
-    {% assign author = site.data.authors[page.author] %}
+  {% if document.author and site.data.authors[document.author] %}
+    {% assign author = site.data.authors[document.author] %}
   {% else %}
     {% assign author = site.author %}
   {% endif %}
   
   {% assign authors = {{author.authorid | split: "," }} %}
 {% else %}
-  {% assign authors = page.authors %}
+  {% assign authors = document.authors %}
 {% endif %}
 
-{% assign document = post | default: page %}
 {% if document.read_time or document.show_date %}
   <p class="page__meta">
     <!-- new: add authors meta -->

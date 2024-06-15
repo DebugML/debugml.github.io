@@ -6,7 +6,7 @@ header:
   overlay_color: "#000"
   overlay_filter: "0.5"
   overlay_image: assets/images/compositional_concepts/composition_mondrian.jpg
-  teaser: assets/images/compositional_concepts/composition_mondrian.jpg
+  teaser: assets/images/compositional_concepts/birds_hands.jpg
   actions:
     - label: "Paper"
       url: "https://arxiv.org/abs/"

@@ -74,6 +74,11 @@ truth_acc:
     image_path: "/assets/images/compositional_concepts/Truth (1) (1).jpg"
     alt: ""
     title: ""
+image-selector-image1-0:
+  - url: "/assets/images/compositional_concepts/cub_0.png"
+    image_path: "/assets/images/compositional_concepts/cub_0.png"
+    alt: ""
+    title: ""
 ---
 <script type="text/javascript" async
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
@@ -82,37 +87,172 @@ truth_acc:
 
 > *Concept-based interpretability linearly decomposes a model’s hidden representation into vectors corresponding to human-interpretable concepts, but do these concepts really compose through addition? In our recent paper, we investigate this question and find that foundation models represent compositional concepts, such as “white bird” and “small bird”, in a way supporting composition through addition, but existing concept learning methods do not find such concepts. We propose Compositional Concept Extraction (CCE) as a way to encourage the learning of such compositional concepts.*
 
+<figure>
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: auto 1fr auto 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            text-align: center;
+        }
+        .section-title {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            font-weight: bold;
+        }
+        .img-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .img-container img {
+            width: 150px;
+            height: auto;
+            margin-bottom: 5px;
+        }
+        .operation {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .column-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+    <div class="container">
+        <!-- PCA Concepts Section -->
+        <div class="section-title">
+            PCA Concepts
+        </div>
+        <div>
+            <div class="column-title">color: white</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_pca_white_1.jpg" alt="PCA color: white image 1">
+                <img src="/assets/images/compositional_concepts/cub_pca_white_2.jpg" alt="PCA color: white image 2">
+            </div>
+        </div>
+        <div class="operation">+</div>
+        <div>
+            <div class="column-title">size: 3-5in</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_pca_small_1.jpg" alt="PCA size: 3-5in image 1">
+                <img src="/assets/images/compositional_concepts/cub_pca_small_2.jpg" alt="PCA size: 3-5in image 2">
+            </div>
+        </div>
+        <div class="operation">=</div>
+        <div>
+            <div class="column-title">?</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_pca_comp_1.jpg" alt="PCA result image 1">
+                <img src="/assets/images/compositional_concepts/cub_pca_comp_2.jpg" alt="PCA result image 2">
+            </div>
+        </div>
+    </div>
+    <figcaption>Depiction of concepts discovered by PCA from the CLIP image representation of the bird images in the CUB dataset. The concept representation is depicted using the two images with the largest cosine similarity with the concept. The shown concepts correspond to the "color: white" and "size: 3-5in" annotations provided by the dataset, but composing the concepts through addition results in an unidentifiable concept.</figcaption>
+</figure>
+
 To describe something complicated we often rely on explanations using simpler components. For instance, a [brachiosaurus](https://brachiolab.github.io/) is a dinosaur which looks like a mixture of a lizard and a giraffe, and a dog is an animal with four legs, a tail, fur, and a snout. This is the *principle of compositionality* at work!
 
-A promising method for understanding deep neural networks is to similarly break down their complex behavior into human-understandable components called concepts. Interestingly, past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) successfully ascribed human-interpretable concepts such as “fur” and “snout” to the features learned by modern deep learning models. For example, the following example shows the "color: white" and "size: 3-5in" concepts for the CLIP model that are learned by prior work and by our method which is explained later.
+A promising method for understanding deep neural networks is to similarly break down their complex behavior into human-understandable components called concepts. Interestingly, past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. ascribe human-interpretable concepts such as “fur” and “snout” to the features learned by modern deep learning models. The example above shows the concepts "color: white" and "size: 3-5in" which are discovered by an existing technique for the CLIP model on a dataset composed of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)):
 
-<!-- <Concept examples here> -->
-<!-- ![Concept failure](assets/fig1.jpg) -->
-{% include gallery id="fig1" layout="" caption="" %}
+We can see that the individual concepts look reasonable, while adding the concept representations together produces an unidentifiable concept which we label "?". Many prior works, such as [IBD](https://openaccess.thecvf.com/content_ECCV_2018/papers/Antonio_Torralba_Interpretable_Basis_Decomposition_ECCV_2018_paper.pdf) from Zhou et. al. and recently [TextSpan](https://openreview.net/pdf?id=5Ca9sSzuDp) from Gandelsman et. al., use these discovered concepts to approximately reconstruct the hidden representation of a model. This means that an image of a dog should be roughly encoded as a sum of the concepts for “fur”, “snout”, “four legs”, and “tail”. While the qualitative examples of individual concepts, as shown above, seem to show that the individual concepts correspond closely to human interpretable concepts, adding them together to compose them does not actually compose the concepts for the PCA method.
 
-Many prior works, such as [IBD](https://openaccess.thecvf.com/content_ECCV_2018/papers/Antonio_Torralba_Interpretable_Basis_Decomposition_ECCV_2018_paper.pdf) and recently [TextSpan](https://openreview.net/pdf?id=5Ca9sSzuDp), use these discovered concepts to approximately reconstruct the hidden space of a model. This means that an image of a dog should be roughly encoded as a sum of the concepts for “fur”, “snout”, “four legs”, and “tail”. While the qualitative examples of individual concepts, as shown above, seem to show that the individual concepts correspond closely to human interpretable concepts, adding them together to compose them does not actually compose the concepts for the PCA method. Our method, which we will introduce later does in fact discover concepts which compose through addition as we see in the figure above.
+Our method, which we introduce later, does in fact discover concepts which compose through addition:
+<figure>
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: auto 1fr auto 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            font-weight: bold;
+        }
+        .img-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .img-container img {
+            width: 150px;
+            height: auto;
+            margin-bottom: 5px;
+        }
+        .operation {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .column-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+    <div class="container">
+        <!-- PCA Concepts Section -->
+        <div class="section-title">
+            CCE Concepts
+        </div>
+        <div>
+            <div class="column-title">color: white</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_ours_white_1.jpg" alt="PCA color: white image 1">
+                <img src="/assets/images/compositional_concepts/cub_ours_white_2.jpg" alt="PCA color: white image 2">
+            </div>
+        </div>
+        <div class="operation">+</div>
+        <div>
+            <div class="column-title">size: 3-5in</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_ours_small_1.jpg" alt="PCA size: 3-5in image 1">
+                <img src="/assets/images/compositional_concepts/cub_ours_small_2.jpg" alt="PCA size: 3-5in image 2">
+            </div>
+        </div>
+        <div class="operation">=</div>
+        <div>
+            <div class="column-title">color: white <br> size: 3-5in</div>
+            <div class="img-container">
+                <img src="/assets/images/compositional_concepts/cub_ours_comp_1.jpg" alt="PCA result image 1">
+                <img src="/assets/images/compositional_concepts/cub_ours_comp_2.jpg" alt="PCA result image 2">
+            </div>
+        </div>
+    </div>
+<figcaption>Depiction of concepts discovered by our method (CCE) on the same dataset as used for the previous figure. These concepts not only show the individual concepts of "color: white" and "size: 3-5in", but their composition through addition also corresponds to the composition of the concepts.</figcaption>
+</figure>
 
 ## Studying Compositional Concept Representations Using Synthetic Data
 
-First, we define a concept as a set of *symbols*, such as the concept $$\{\text{“tail”}\}$$ which we denote as “tail” for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concepts and $$\mathbb{R}^d$$ is an embedding space in some dimension $$d$$. Since concepts are defined as sets, we allow them to be composed through the union operator such that “four legs and tail” = “four legs” $$\cup$$ “tail”. Therefore, compositional concept representations mean that concept representations should compose through addition whenever concepts compose through the union, or that:
-> For concepts $$c_i, c_j \in \mathbb{C}$$, the concept representation $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ is compositional if for some $$w_{c_i}, w_{c_j}\in \mathbb{R}^+$$,
-> $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
+We define a concept as a set of *symbols*, such as the concept $$\{\text{“tail”}\}$$ which we denote as “tail” for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concepts and $$\mathbb{R}^d$$ is an embedding space in some dimension $$d$$. Since concepts are defined as sets, we allow them to be composed through the union operator such that “four legs and tail” = “four legs” $$\cup$$ “tail”. Therefore, compositional concept representations mean that concept representations should compose through addition whenever concepts compose through the union, or that:
+
+**Definition:** For concepts $$c_i, c_j \in \mathbb{C}$$, the concept representation $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ is compositional if for some $$w_{c_i}, w_{c_j}\in \mathbb{R}^+$$,
+$$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
+{: .notice--info}
+
 
 Given these definitions, we start from the case where we have data with known concepts (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
 
-To understand how concepts are actually represented by pretrained models we resort to synthetic data where we can get representations for ground truth concepts. We consider the [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) dataset which consists of generated images containing an object with two attributes, color and shape, and each image corresponds to one of three shapes (cube, sphere, cylinder) and one of three colors (red, green, blue). As each image is generated with exactly one shape and one color, we have annotations for which color and shape each image contains, allowing us to derive ground truth concept representations for the shape and color concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+To understand how concepts are actually represented by pretrained models we resort to synthetic data where we can get representations for ground truth concepts. We consider the [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) dataset which consists of generated images containing an object with two attributes, color and shape, and each image corresponds to one of three shapes (cube, sphere, cylinder) and one of three colors (red, green, blue).
 
-Our main finding from the ground truth concept representations for each shape and color (6 total concepts) reveal that CLIP encodes concepts of different attributes as orthogonal, but that concepts of the same attribute need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below. The concept pairs of the same attribute have non-zero cosine similarity, while cross-attribute pairs have nearly zero cosine similarity, implying orthogonality.
+As each image is generated with exactly one shape and one color, we have annotations for which color and shape each image contains, allowing us to derive ground truth concept representations for the shape and color concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+
+Our main finding from the ground truth concept representations for each shape and color (6 total concepts) is that CLIP encodes concepts of different attributes (colors vs. shapes) as orthogonal, but that concepts of the same attribute (e.g. different colors) need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below. The concept pairs of the same attribute have non-zero cosine similarity, while cross-attribute pairs have nearly zero cosine similarity, implying orthogonality.
 
 <!-- <Heatmap> -->
 <!-- ![GT Orthogonality](assets/gt_orthogonality.jpg) -->
-{% include gallery id="gt_orthogonality" layout="" caption="" %}
+{% include gallery id="gt_orthogonality" layout="" caption="Cosine similarities of all pairs of concepts. We can see that concepts within an attribute (red, green, and blue or sphere, cube, and cylinder) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are all nearly zero." %}
 
-We now see why existing concept learning methods find concepts which do not compose correctly through addition. Existing methods either impose too strong or too weak of a constraint on the orthogonality of discovered concepts. For instance, PCA requires that all concepts are orthogonal to each other, but concepts like “red” and “blue” should not be orthogonal. On the other hand, methods such as ACE place no restrictions on concept orthogonality, which means concepts such as “red” and “cube” may not be orthogonal.
+We now see why existing concept learning methods find concepts which do not compose correctly through addition. Existing methods either impose too strong or too weak of a constraint on the orthogonality of discovered concepts. For instance, PCA requires that all concepts are orthogonal to each other, but concepts like “red” and “blue” should not be orthogonal. On the other hand, methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality, which means concepts such as “red” and “cube” may not be orthogonal.
 
 While we show that the ground truth concepts display certain orthogonality structure, does that mean that concept representations must also display such structure to be compositional through addition? In our paper, we prove the answer is yes in a simplified setting!
 
-We show a toy example below where we first show how concepts which follow the described orthogonality structure compose correctly, while a set of concepts which do not follow such structure exhibit unexpected compositions. In addition, the individual concept representations still perfectly discriminate between the individual concepts, so looking at each concept independently would mislead us to believe we have learned the correct concepts.
+<!-- We show a toy example below where we first show how concepts which follow the described orthogonality structure compose correctly, while a set of concepts which do not follow such structure exhibit unexpected compositions. In addition, the individual concept representations still perfectly discriminate between the individual concepts, so looking at each concept independently would mislead us to believe we have learned the correct concepts. -->
 
 <!-- <Toy example> -->
 
@@ -122,12 +262,16 @@ Given these findings, we next outline our method for finding compositional conce
 
 {% include gallery id="method" layout="" caption="" %}
 
-How do we learn compositional concept representations from a pretrained model? Our findings from the synthetic experiments as described above show that compositional concepts will be represented such that concepts from different attributes are orthogonal to each other while concepts of the same attribute may not be orthogonal. To create this compositionality structure, we use an unsupervised iterative orthogonal projection approach. As shown in the diagram above, we can learn the concepts within one attribute using a directional clustering approach such as spherical K-Means, and then we project away all these concepts so that concepts discovered in the next iteration are orthogonal.
+How do we learn compositional concept representations from a pretrained model? Our findings from the synthetic experiments described above show that compositional concepts will be represented such that concepts from different attributes are orthogonal to each other while concepts of the same attribute may not be orthogonal. To create this compositionality structure, we use an unsupervised iterative orthogonal projection approach.
+
+As shown in the diagram above, CCE has two high level components of *LearnSubspace* and *LearnConcepts* which result in a set of concepts corresponding to one attribute after one iteration and find further attribute in additional iterations. The goal of the LearnConcepts step is to find a set of concepts in a subspace $$P$$ while the LearnSubspace step tries to find an optimal subspace where given concepts are maximally clustered. These steps are mutually dependent, so we jointly learn both the subspace $$P$$ and the concepts within the subspace.
+
+Running one iteration of CCE results in a subspace $$P$$ and a set of concepts within that subspace. For the next iteration of CCE, we remove the subspace $$P$$ from the embedding space and repeat the algorithm. This removal process guarantees that all concepts discovered in iteration $$i$$ are orthogonal to all concepts discovered in iterations $$j < i$$. This mirrors the orthogonality structure we previously described since concepts within one discovered subspace may not be orthonal, but the concepts in different subspaces will be orthogonal. Therefore, CCE is an unsupervised alorithm for finding concepts divided into orthogonal subspaces.
 
 
 ## Discovering New Concepts
 
-Since our method is unsupervised, we can apply it to larger-scale datasets where we do not know all the relevant concepts and see what concepts are discovered. Click through the below visualization for some examples of the disovered concepts:
+Since our method is unsupervised, we apply it to larger-scale datasets where we do not know all the relevant concepts and see what concepts are discovered. Click through the below visualization for some examples of the disovered concepts:
 
 For a dataset of bird images (CUB):
 <div class="image-selector-visualization">
@@ -148,7 +292,7 @@ For a dataset of bird images (CUB):
         .image-selector-container {
             display: flex;
             justify-content: space-around;
-            width: 90%;
+            width: 100%;
             /* margin: 10px auto; */
             /* margin-top: 0px; */
             max-width: 1200px;
@@ -201,26 +345,58 @@ For a dataset of bird images (CUB):
         <div class="image-selector-column">
             <div id="image-selector-title1">Select C1</div>
             <select id="image-selector1" class="image-selector-select" onchange="updateImageSelectorImages()">
-                <option value="">Choose one</option>
+                <!-- <option value="">Choose one</option> -->
                 <option value="1">White birds</option>
                 <option value="16">Brown birds</option>
+                <option value="0">Small green birds</option>
+                <option value="8">Woodpeckers</option>
+                <option value="15">Birds with water</option>
+                <option value="7">Birds in water</option>
             </select>
+            <a href="/assets/images/compositional_concepts/cub_1.png">
             <img id="image-selector-image1-1" class="image-selector-image" src="/assets/images/compositional_concepts/cub_1.png" alt="Image 1 Option 1">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_16.png">
             <img id="image-selector-image1-16" class="image-selector-image" src="/assets/images/compositional_concepts/cub_16.png" alt="Image 1 Option 2">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_0.png">
+            <img id="image-selector-image1-0" class="image-selector-image" src="/assets/images/compositional_concepts/cub_0.png" alt="Image 1 Option 3">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_8.png">
+            <img id="image-selector-image1-8" class="image-selector-image" src="/assets/images/compositional_concepts/cub_8.png" alt="Image 1 Option 4">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_15.png">
+            <img id="image-selector-image1-15" class="image-selector-image" src="/assets/images/compositional_concepts/cub_15.png" alt="Image 1 Option 5">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_7.png">
+            <img id="image-selector-image1-7" class="image-selector-image" src="/assets/images/compositional_concepts/cub_7.png" alt="Image 1 Option 6">
+            </a>
         </div>
         <div class="image-selector-column">
             <div id="image-selector-title2">Select C2</div>
             <select id="image-selector2" class="image-selector-select" onchange="updateImageSelectorImages()">
-                <option value="">Choose one</option>
+                <!-- <option value="">Choose one</option> -->
                 <option value="47">Birds with food in mouth</option>
                 <option value="35">Frames around image</option>
             </select>
+            <a href="/assets/images/compositional_concepts/cub_47.png">
             <img id="image-selector-image2-47" class="image-selector-image" src="/assets/images/compositional_concepts/cub_47.png" alt="Image 2 Option 1">
+            </a>
+
+            <a href="/assets/images/compositional_concepts/cub_35.png">
             <img id="image-selector-image2-35" class="image-selector-image" src="/assets/images/compositional_concepts/cub_35.png" alt="Image 2 Option 2">
+            </a>
         </div>
         <div class="image-selector-column">
             <div id="image-selector-title3">C1 + C2</div>
+            <a id="image-selector-result-a" href="">
             <img id="image-selector-result-image" class="image-selector-image" src="" alt="Resulting Image">
+            </a>
         </div>
     </div>
 
@@ -256,13 +432,19 @@ For a dataset of bird images (CUB):
 
             // Show the resulting image based on the combination of the two selectors
             if (selector1Value && selector2Value) {
+                const resulta = document.getElementById('image-selector-result-a');
                 const resultImage = document.getElementById('image-selector-result-image');
+                resulta.href = `/assets/images/compositional_concepts/cub_${selector1Value}_${selector2Value}.png`;
                 resultImage.src = `/assets/images/compositional_concepts/cub_${selector1Value}_${selector2Value}.png`;
                 resultImage.classList.add('show');
             } else {
                 document.getElementById('image-selector-result-image').classList.remove('show');
             }
+
         }
+        document.addEventListener("DOMContentLoaded", function() {
+            updateImageSelectorImages();
+        });
     </script>
 </div>
 
@@ -297,12 +479,9 @@ Examples of concepts on language data:
 </ul>
 
 
-
-
-
 ## CCE Concepts are More Compositional
 
-How do we measure the compositionality of a set of concept representations? Compositionality has been evaluated in [existing work](https://openreview.net/pdf?id=HJz05o0qK7) on representation learning, and we adapt these metrics for concept learning. To measure compositionality, we assume that a dataset with labeled concepts is used and we evaluate how well the discovered concepts match the labeled concepts and their compositionality structure.
+To see if CCE find concepts which are more compositional than existing approaches, we need a way to evaluate the compositionality of concept representations. Compositionality has been evaluated in [existing work from Andreas](https://openreview.net/pdf?id=HJz05o0qK7) on representation learning, and we adapt these metrics for concept learning. To measure compositionality, we assume that a dataset with labeled concepts is used and we evaluate how well the discovered concepts match the labeled concepts and their compositionality structure.
 
 The compositionality score of discovered concepts on a dataset $$D$$ where each sample embedding $$z$$ has associated concepts $$C$$ is given by the following:
 
@@ -314,19 +493,19 @@ Compositionality scores for all baselines and CCE are shown below for the CLEVR 
 
 |           | CLEVR             | CUB-sub           | Truth-sub         |
 |:----------|:------------------|:------------------|:------------------|
-| GT        | 3.162 $$\pm$$ 0.000 | 0.472 $$\pm$$ 0.000 | 3.743 $$\pm$$ 0.000 |
-| PCA       | 3.684 $$\pm$$ 0.000 | 0.481 $$\pm$$ 0.000 | 3.988 $$\pm$$ 0.000 |
-| ACE       | 3.496 $$\pm$$ 0.116 | 0.502 $$\pm$$ 0.008 | 3.727 $$\pm$$ 0.032 |
-| DictLearn | 3.387 $$\pm$$ 0.007 | 0.503 $$\pm$$ 0.002 | 3.708 $$\pm$$ 0.007 |
-| NML       | 3.761 $$\pm$$ 0.050 | 0.542 $$\pm$$ 0.001 | 3.812 $$\pm$$ 0.063 |
-| CT        | 4.931 $$\pm$$ 0.001 | 0.546 $$\pm$$ 0.000 | 4.348 $$\pm$$ 0.000 |
+| *GT*        | *3.162 $$\pm$$ 0.000* | *0.472 $$\pm$$ 0.000* | *3.743 $$\pm$$ 0.000* |
+| [PCA](https://arxiv.org/pdf/2310.01405)       | 3.684 $$\pm$$ 0.000 | 0.481 $$\pm$$ 0.000 | 3.988 $$\pm$$ 0.000 |
+| [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf)       | 3.496 $$\pm$$ 0.116 | 0.502 $$\pm$$ 0.008 | 3.727 $$\pm$$ 0.032 |
+| [DictLearn](https://aclanthology.org/2021.deelio-1.1.pdf) | 3.387 $$\pm$$ 0.007 | 0.503 $$\pm$$ 0.002 | 3.708 $$\pm$$ 0.007 |
+| [NMF](https://openaccess.thecvf.com/content/CVPR2023/papers/Fel_CRAFT_Concept_Recursive_Activation_FacTorization_for_Explainability_CVPR_2023_paper.pdf)       | 3.761 $$\pm$$ 0.050 | 0.542 $$\pm$$ 0.001 | 3.812 $$\pm$$ 0.063 |
+| [CT](https://openreview.net/pdf?id=kAa9eDS0RdO)        | 4.931 $$\pm$$ 0.001 | 0.546 $$\pm$$ 0.000 | 4.348 $$\pm$$ 0.000 |
 | Random    | 4.927 $$\pm$$ 0.001 | 0.546 $$\pm$$ 0.000 | 4.348 $$\pm$$ 0.000 |
-| CCE       | 3.163 $$\pm$$ 0.000 | 0.459 $$\pm$$ 0.004 | 3.689 $$\pm$$ 0.002 |
+| CCE       | **3.163 $$\pm$$ 0.000** | **0.459 $$\pm$$ 0.004** | **3.689 $$\pm$$ 0.002** |
 
 
 ## CCE Concepts Result in Better Downstream Classification Accuracy
 
-A central use-case for concepts is for interpretable classification with [posthoc concept-bottleneck models](https://openreview.net/pdf?id=nA5AZ8CEyow). For four datasets spanning image and text domains, we evaluate CCE concepts against baselines in terms of classification accuracy after training a posthoc concept-bottleneck model on the extracted concepts. We show classification accuracy with increasing numbers of extracted concepts in the below figure, and we see that CCE always achieves the highest accuracy or near-highest accuracy.
+A central use-case for concepts is for interpretable classification with [Posthoc Concept-Bottleneck Models (PCBMs)](https://openreview.net/pdf?id=nA5AZ8CEyow). For four datasets spanning image and text domains, we evaluate CCE concepts against baselines in terms of classification accuracy after training a PCBM on the extracted concepts. We show classification accuracy with increasing numbers of extracted concepts in the figure below, and we see that CCE always achieves the highest accuracy or near-highest accuracy.
 
 <!-- <Figure of downstream accuracy> -->
 <ul class="tab" data-tab="44bf2f41-34a3-4bd7-b605-29d394ac9b0" data-name="tasks_acc">
@@ -371,6 +550,6 @@ A central use-case for concepts is for interpretable classification with [postho
 
 ## Conclusion
 
-Compositionality is a desired property of concept representations as concepts themselves are often compositional, but we show that existing concept learning methods do not always learn concept representations which compose through addition. After studying the representation of concepts in a synthetic setting we find two salient properties of compositional concept representations, and we propose a concept learning method, CCE, which leverages our insights to learn compositional concepts. CCE finds more compositional concepts than existing techniques, results in better downstream accuracy when used as the features in a posthoc concept-bottleneck model, and even discovers new compositional concepts as shown through our qualitative examples.
+Compositionality is a desired property of concept representations as human-interpretable concepts are often compositional, but we show that existing concept learning methods do not always learn concept representations which compose through addition. After studying the representation of concepts in a synthetic setting we find two salient properties of compositional concept representations, and we propose a concept learning method, CCE, which leverages our insights to learn compositional concepts. CCE finds more compositional concepts than existing techniques, results in better downstream accuracy when used as the features in a PCBM, and even discovers new compositional concepts as shown through our qualitative examples.
 
 If interested, please check out the details in our paper [here]()! Our code is available [here](https://github.com/adaminsky/compositional_concepts), and you can easily apply CCE to your own dataset or adapt our code to create new concept learning methods.

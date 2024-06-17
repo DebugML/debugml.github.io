@@ -96,10 +96,8 @@ Given such a task, a user may formulate the following prompt:
 
 
 $$
-\begin{aligned}
-  \Gamma &= \{A \to B, A \to C, D \to E, C \land E \to F\}, \\
-  \Phi &= \{A,D\}
-\end{aligned}
+  \Gamma = \{A \to B, A \to C, D \to E, C \land E \to F\}, \quad
+  \Phi = \{A,D\}
 $$
 
 
@@ -121,19 +119,7 @@ $$
 Using the inference properties of propositional Horn logic, we classify three different ways in which an LLM might not properly follow the rules.
 
 
-**(1) Fact amnesia**: the model skips a reasoning step.
-For example:
-
-$$
-  \{A,D\}
-  \xrightarrow{\mathcal{R}} \{B,D,E\}
-  \xrightarrow{\mathcal{R}} \{B,C,D,E\}
-  \xrightarrow{\mathcal{R}} \cdots
-$$
-
-Observe that $A$ is absent from the second state.
-
-**(2) Rule suppression**: a rule and its dependents are ignored.
+**(1) Rule suppression**: a rule and its dependents are ignored.
 
 $$
   \{A,D\}
@@ -144,6 +130,18 @@ $$
 
 Observe that $E$ is absent from the second state.
 
+
+**(2) Fact amnesia**: the model skips a reasoning step.
+For example:
+
+$$
+  \{A,D\}
+  \xrightarrow{\mathcal{R}} \{B,D,E\}
+  \xrightarrow{\mathcal{R}} \{B,C,D,E\}
+  \xrightarrow{\mathcal{R}} \cdots
+$$
+
+Observe that $A$ is absent from the second state.
 
 **(3) State coercion**: the model infers something absurd.
 
@@ -158,14 +156,7 @@ $$
 <!-- image of the 2x2 grid -->
 
 
-
-
-<!--
-{% include gallery id="gallery_chatgpt_error" caption="A mistake: ChatGPT can no longer derive *D* when asked if it is certain." %}
--->
-
 Of these three failure modalities, we focus on **rule suppression**, which is most closely related to jailbreak attacks, and refer to our paper for additional discussion on fact amnesia and state coercion.
-
 
 
 ## Subverting Inference in Transformers (Theory)
@@ -186,14 +177,19 @@ For binarized prompts, a transformer with one layer, one self-attention head, an
 {: .notice--info}
 
 
-Importantly, models at this size can still learn propositional inference to a high accuracy.
+The key caveat here is that this is a result about existence: it shows that transformers of a certain size have the sufficient capacity to encode one step of inference.
+Our paper gives additional details of the proof, in which we explicitly specify all the parameter values of a transformer such that it is able to implement the inference circuit.
+Our transformer encoding is not the only one in the [literature](https://arxiv.org/abs/2205.11502), but to our knowledge, it is the smallest, which is generally an advantage for theoretical analysis.
+So how do transformers of such sizes *actually learn*?
+Our experiments show that models at this size can still learn propositional inference to a high accuracy.
 
 
-{% include gallery id="gallery_exp1" caption="Small transformers can learn propositional inference to high accuracy. Shown are the accuracies for autoregressively running $t = 1, 2, 3$ steps of inference, respectively. A model must correctly predict the state of all $n$ propositions up to $t$ steps to be counted as correct." %}
+{% include gallery id="gallery_exp1" caption="Small transformers can learn propositional inference to high accuracy. Left, center, and right are the accuracies for $t = 1, 2, 3$ steps of inference, respectively. A model must correctly predict the state of all $n$ propositions up to $t$ steps to be counted as correct." %}
 
 
-This provides a simplified theoretical setup in which to study attacks on rule-following.
-In particular, the simplicity of our theoretical model lets us manually construct attacks that are guaranteed to work against it.
+In particular, models of size $d \geq 2n$ can consistenly learn propostional inference to high accuracy, whereas those at $d < 2n$ begin to struggle.
+In addition to the fact that a one-layer and one-head transformer is fairly small, these suggest that our theoretical construction is not a completely unrealistic setup on which to study attacks on rule-following.
+As stated before, a key advantage of our theoretical constrution is its size, which lets us manually construct attacks against all three modalities of inference failure --- rule suppression, fact amnesia, state coercion --- that are guaranteed to succeed.
 
 
 **Theorem.** (Theory-based Attacks, Informal)
@@ -204,11 +200,17 @@ To design rule suppression, for example, the main strategy is to create a suffix
 
 <!-- image of rule suppression for the binarized case -->
 
+We have so far designed these attacks against a *theoretical construction* in which we manually assigned values to every network parameter.
+But how do such attacks transfer to *learned models*, i.e., models with the same size as specified in the theory, but trained from data?
+Interestingly, such learned reasoners are also (mostly) susceptible to the same form of attacks.
 
-Interestingly, reasoners trained from data are also susceptible to attacks devised against theory.
+
 
 
 
 ## Real Jailbreaks Mirror Theory-based Ones
 
 We have previously considered how theoretical jailbreaks might work against simplified models that take a binarized representation of the prompt.
+It turns out that such attacks transfer to learned models as well.
+
+

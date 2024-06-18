@@ -2,6 +2,10 @@
 title: "Logicbreaks: A Framework for Understanding Subversion of Rule-based Inference"
 layout: single
 excerpt: "We study jailbreak attacks through propositional Horn inference."
+header:
+  overlay_filter: "0.75"
+  overlay_image: /assets/images/logicbreaks/building_bombs.gif
+  teaser: /assets/images/logicbreaks/building_bombs.gif
 
 authors:
   - Anton Xue
@@ -66,6 +70,7 @@ gallery_mc_suppression:
 > Interestingly, we find that real LLM jailbreak share similar strategies as our theory-based ones.
 
 {% include gallery id="gallery_building_bombs" caption="An adversarial suffix makes the LLM ignore its safety prompt." %}
+
 
 ## Logical Inference Can Model Rule-following
 
@@ -200,7 +205,7 @@ To better understand how these attacks might function in large language models, 
 We show that small transformers have the capacity to encode and learn propositional Horn inference, and that attacks designed against theory models transfer to models that learn to reason under the constraints imposed by the theory.
 
 
-#### Small Transformers Can Encode and Learn Inference
+### Small Transformers Can Encode and Learn Inference
 
 We first show that even small transformers have both the capacity to encode and learn propositional inference.
 Our core idea is to use transformers to approximate the Boolean circuits traditionally used in inference tasks, such as those of propositional Horn inference.
@@ -280,7 +285,7 @@ Although a one-layer and one-head transformer is fairly small, these empirical f
 We remark that it is an open problem to better understand the training dynamics and verify whether these learned models succeed in achieving a *correct* solution.
 
 
-#### Theory-based Attacks Transfer to Learned Models
+### Theory-based Attacks Transfer to Learned Models
 
 We next show that our theory-based models can be attacked, and that such attacks transfer to learned models.
 As stated before, a key advantage of our construction is its size, which lets us manually construct attacks against all three modalities of inference failure --- rule suppression, fact amnesia, and state coercion --- that are guaranteed to succeed.
@@ -314,15 +319,8 @@ Interestingly, the learned reasoners are also susceptible to theory-based rule s
 {% include gallery id="gallery_theory_attacks" caption="With some modifications, the theory-based rule suppression and fact amnesia attacks achieve a high attack success rate. The state coercion does not succeed even with our modifications, but attains a 'converging' behavior as evidenced by the diminishing variance. The number of 'repetitions' is a measure of how 'strong' the attack is." %}
 
 
-<!--
-In summary, our results here are as follows
-* Small models can theorically encode and practically learn one step of inference.
-* Attacks derived against our theoretical construction, with some modifications, succeed against learned reasoners subject to our theoretical size restrictions.
--->
-
 
 ## Real Jailbreaks Mirror Theory-based Ones
-
 We have previously considered how theoretical jailbreaks might work against simplified models that take a binarized representation of the prompt.
 It turns out that such attacks transfer to real jailbreak attacks as well.
 For this task, we fine-tuned GPT-2 models on a set of Minecraft recipes curated from [GitHub](https://github.com/joshhales1/Minecraft-Crafting-Web/).
@@ -370,4 +368,3 @@ In summary, our results here are as follows
 ## Conclusion
 We use propositional Horn logic as a framework to study how to subvert the rule-following of language models.
 We find that attacks derived in a simple, theoretical setting are mirrored in real jailbreaks against LLMs.
-

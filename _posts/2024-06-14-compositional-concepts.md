@@ -155,9 +155,9 @@ image-selector-image1-0:
 
 To describe something complicated we often rely on explanations using simpler components. For instance, a [brachiosaurus](https://brachiolab.github.io/) is a dinosaur which looks like a mixture of a lizard and a giraffe, and a dog is an animal with four legs, a tail, fur, and a snout. This is the *principle of compositionality* at work!
 
-A promising method for understanding deep neural networks is to similarly break down their complex behavior into human-understandable components called concepts. Interestingly, past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. ascribe human-interpretable concepts such as “fur” and “snout” to the features learned by modern deep learning models. The example above shows the concepts "color: white" and "size: 3-5in" which are discovered by an existing technique for the CLIP model on a dataset composed of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)).
+A promising method for understanding deep neural networks is to similarly break down their complex behavior into human-understandable components called concepts. Interestingly, past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. ascribe human-interpretable concepts such as "fur" and "snout" to the features learned by modern deep learning models. The example above shows the concepts "color: white" and "size: 3-5in" which are discovered by an existing technique for the CLIP model on a dataset composed of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)).
 
-Many prior works, such as [IBD](https://openaccess.thecvf.com/content_ECCV_2018/papers/Antonio_Torralba_Interpretable_Basis_Decomposition_ECCV_2018_paper.pdf) from Zhou et. al. and recently [TextSpan](https://openreview.net/pdf?id=5Ca9sSzuDp) from Gandelsman et. al., use these discovered concepts to approximately reconstruct the hidden representation of a model. This means that an image of a dog should be roughly encoded as a sum of the concepts for “fur”, “snout”, “four legs”, and “tail”.
+Many prior works, such as [IBD](https://openaccess.thecvf.com/content_ECCV_2018/papers/Antonio_Torralba_Interpretable_Basis_Decomposition_ECCV_2018_paper.pdf) from Zhou et. al. and recently [TextSpan](https://openreview.net/pdf?id=5Ca9sSzuDp) from Gandelsman et. al., use these discovered concepts to approximately reconstruct the hidden representation of a model. This means that an image of a dog should be roughly encoded as a sum of the concept representations for "fur", "snout", "four legs", and "tail".
 In the example of concepts shown at the top of the page for the PCA method, we see that the individual concepts look reasonable, while composing the concept representations with addition produces an unidentifiable concept (it seems to be neither white nor small birds) which we label "?".
 
 Our method, which we introduce later, does in fact discover concepts which compose through addition:
@@ -225,12 +225,13 @@ Our method, which we introduce later, does in fact discover concepts which compo
             </div>
         </div>
     </div>
-<figcaption>Depiction of concepts discovered by our method (CCE) on the same dataset as used for the previous figure. These concepts not only show the individual concepts of "color: white" and "size: 3-5in", but their composition through addition also corresponds to the composition of the concepts.</figcaption>
+<figcaption>Depiction of concepts discovered by our method (CCE) on the same dataset as used for the previous figure. These concepts not only show the individual concepts of "color: white" and "size: 3-5in", but their composition through addition also corresponds to the composition of the concepts. The small white birds shown on the right are annotated as small and white in the dataset.</figcaption>
 </figure>
 
-## Studying Compositional Concept Representations Using Controlled Datasets
 
-We define a concept as a set of *symbols*, such as the concept $$\{\text{“tail”}\}$$ which we denote as “tail” for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concepts names and $$\mathbb{R}^d$$ is an embedding space in some dimension $$d$$. Since concepts are defined as sets, we allow them to be composed through the union operator such that “four legs and tail” = “four legs” $$\cup$$ “tail”. Therefore, compositional concept representations mean that concept representations should compose through addition whenever concepts compose through the union, or that:
+## Experiments Using Controlled Datasets
+
+We define a concept as a set of *symbols*, such as the concept $$\{``\text{tail"}\}$$ which we denote as $$``\text{tail"}$$ for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concepts names and $$\mathbb{R}^d$$ is an embedding space in some dimension $$d$$. Since concepts are defined as sets, we allow them to be composed through the union operator such that $$``\text{four legs and tail"} = ``\text{four legs"} \cup ``\text{tail"}$$. Therefore, compositional concept representations mean that concept representations should compose through addition whenever concepts compose through the union, or that:
 
 **Definition:** For concepts $$c_i, c_j \in \mathbb{C}$$, the concept representation $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ is compositional if for some $$w_{c_i}, w_{c_j}\in \mathbb{R}^+$$,
 $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
@@ -241,7 +242,7 @@ Given these definitions, we start from the case where we have data with known co
 
 To understand how concepts are actually represented by pretrained models we resort to a controlled data setting where we can get representations for ground truth concepts. We consider the [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/) dataset used above which consists of images of different bird species annotated with various finegrained attributes. To create a controlled setting, we use the provided finegrained annotations to subset the dataset to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large).
 
-As each image is contains a bird of exactly one size and one color, we have annotations for which color and size each image represents, allowing us to derive ground truth concept representations for the bird shape and size concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+As each image contains a bird of exactly one size and one color, we have annotations for which color and size each image represents, allowing us to derive ground truth concept representations for the bird shape and size concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
 
 Our main finding from the ground truth concept representations for each bird size and color (6 total concepts) is that CLIP encodes concepts of different attributes (colors vs. sizes) as orthogonal, but that concepts of the same attribute (e.g. different colors) need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below.
 
@@ -484,7 +485,7 @@ Examples of concepts on language data:
 </ul>
 
 
-## CCE Concepts are More Compositional
+## CCE Concepts are Compositional
 
 To see if CCE finds concepts which are more compositional than existing approaches, we need a way to evaluate the compositionality of concept representations. Compositionality has been evaluated in [existing work from Andreas](https://openreview.net/pdf?id=HJz05o0qK7) on representation learning, and we adapt these metrics for concept learning. To measure compositionality, we assume that a dataset with labeled concepts is used and we evaluate how well the discovered concepts match the labeled concepts and their compositionality structure.
 
@@ -510,7 +511,7 @@ Compositionality scores for all baselines and CCE are shown below for the CUB da
 | CCE       | **3.163 $$\pm$$ 0.000** | **0.459 $$\pm$$ 0.004** | **3.689 $$\pm$$ 0.002** |
 
 
-## CCE Concepts Result in Better Downstream Classification Accuracy
+## CCE Concepts Improve Downstream Classification Accuracy
 
 A primary use-case for concepts is for interpretable classification with [Posthoc Concept-Bottleneck Models (PCBMs)](https://openreview.net/pdf?id=nA5AZ8CEyow). For four datasets spanning image and text domains, we evaluate CCE concepts against baselines in terms of classification accuracy after training a PCBM on the extracted concepts. We show classification accuracy with increasing numbers of extracted concepts in the figure below, and we see that CCE always achieves the highest accuracy or near-highest accuracy.
 

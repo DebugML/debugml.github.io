@@ -143,11 +143,12 @@ Based on the starting items of Sheep and Log and the given crafting recipes, you
 {: .notice--info}
 -->
 
-**LLM:**
+**LLM (Prompt):**
 I have Sheep, and so I can create Wool.
 I have Wool, and so I can create String.
 I have Log, and so I can create Stick.
 I have String and Stick, and so I can create Fishing Rod.
+I cannot create any other items.
 {: .notice--info}
 
 
@@ -159,15 +160,8 @@ Because these reference algorithms have nice mathematical properties, an LLM out
 
 ### Rule-following via Forward Chaining
 
-We consider how a classic logic algorithm like [forward chaining](https://en.wikipedia.org/wiki/Forward_chaining) might reason about the user prompt.
-The main idea of forward chaining is to extract the 
-
-
-To run forward chaining, we first express the inference rules $\Gamma$ and known facts $\Phi$ as
-
-
-In turn, we may abstract this prompt into the following set of inference rules $\Gamma$ and known facts $\Phi$:
-:wq
+As a reference algorithm, we use [forward chaining](https://en.wikipedia.org/wiki/Forward_chaining), which is a well-known strategy for inference in propositional Horn logic.
+Given the task, the main idea is to first extract a set of rules $\Gamma$ and known facts $\Phi$ as follows:
 
 $$
   \Gamma = \{A \to B, B \to C, D \to E, C \land E \to F\}, \;
@@ -176,100 +170,121 @@ $$
 
 For example, the rule $C \land E \to F$ read *"If I have Wool and I have Stick, then I can create Fishing Rod"*, and the proposition $B$ stands for "I have Wool", which we treat as equivalent to "I can create Wool".
 The inference task is to find all the derivable propositions.
-A well-known algorithm for this is [forward chaining](https://en.wikipedia.org/wiki/Forward_chaining), which repeatedly applies the inference rules to the known facts until no new knowledge is derivable.
-For the above example, this sequence of derivations is as follows:
+Forward chaining then iteratively applies the rules $\Gamma$ to the known facts $\Phi$ as follows:
 
 $$
 \begin{aligned}
   \{A,D\}
     &\xrightarrow{\mathsf{Apply}[\Gamma]} \{A,B,D,E\} \\
     &\xrightarrow{\mathsf{Apply}[\Gamma]} \{A,B,C,D,E\} \\
-    &\xrightarrow{\mathsf{Apply}[\Gamma]} \{A,B,C,D,E,F\},
+    &\xrightarrow{\mathsf{Apply}[\Gamma]} \{A,B,C,D,E,F\}.
 \end{aligned}
 $$
 
-where $\mathsf{Apply}[\Gamma]$ is a set-to-set function that implements a one-step application of $\Gamma$.
-Because no knowledge may be derived starting from the *proof state* $\\{A,B,C,D,E,F\\}$, we may stop.
+The core component of forward chaining is $\mathsf{Apply}[\Gamma]$, which performs a one-step application of all the rules in $\Gamma$.
+The algorithm terminates when it reaches a *proof state* like, $\\{A,B,C,D,E,F\\}$, from which no new facts can be derived.
 The iterative nature of forward chaining is particularly amenable to LLMs, which commonly use techniques like chain-of-thought to autoregressively generate their output.
 
 
-
 ### Subversions on Rule-following
-So what does it mean to subvert rule-following in propositional Horn logic?
-Intuitively, we take this to mean deviating from the derivation sequence of $\mathsf{Apply}[\Gamma]$.
-In particular, there are three different ways in which such a deviation may occur.
-Given a reasoner model $\mathcal{R}$ that is to mimic $\mathsf{Apply}[\Gamma]$, we categorize the three failure modes of inference as follows:
+
+So what does it mean for an LLM to *not* follow the rules?
+Following our earlier idea, we say that an LLM fails to follow the rules if its output does not "match" that of forward chaining.
+However, a major difference between LLM execution and forward chaining is that an LLM generates its output step-by-step, whereas forward chaining keeps track of all the derivable facts at each step.
+We give additional discussion in our paper about what it means for these two outputs to match, where we identify three different modalities in which they may *fail* to match.
+An adversarial suffix can then target these specific behaviors, which we describe below.
 
 
 **(1) Rule suppression**: a rule and its dependents are ignored.
-In the following, $E$ is absent from the second state, meaning that the rule $D \to E$ failed to trigger:
+Suppose we want to ignore the rule "if I have Wool, then I can create String".
+In this case, we would like for a prompt appended with the adversarial suffix to generate the following:
 
+**LLM (Prompt + Adv. Suffix):**
+I have Sheep, and so I can create Wool.
+I have Log, and so I can create Stick.
+I cannot create any other items.
+{: .notice--danger}
+
+
+<!--
 $$
   \{A,D\}
   \xrightarrow{\mathcal{R}} \{A,B,D\}
   \xrightarrow{\mathcal{R}} \{A,B,C,D\}
   \xrightarrow{\mathcal{R}} \{A,B,C,D\}
 $$
+-->
 
-**LLM (with adv. suffix):**
-I have Sheep, and so I can create Wool.
-I have Wool, and so I can create String.
+**(2) Fact amnesia**: the model skips an intermediate step in its derivation.
+For instance, if we want to make the model skip the derivation of Wool, an adversarial suffix-appended prompt may result in the following.
+
+**LLM (Prompt + Adv. Suffix):**
+I have Sheep, and so I can create String.
+I have Log, and so I can create Stick.
+I have String and Stick, and so I can create Fishing Rod.
 I cannot create any other items.
-{: .notice--info}
+{: .notice--danger}
 
 
-**(2) Fact amnesia**: the model forgets its previously derived information.
-In the following $A$ is absent from the second state:
-
+<!--
 $$
   \{A,D\}
   \xrightarrow{\mathcal{R}} \{\}
   \xrightarrow{\mathcal{R}} \{B,C,D,E\}
   \xrightarrow{\mathcal{R}} \cdots
 $$
+-->
 
 
 **(3) State coercion**: the model infers something absurd.
-In the following, each inference step arrives at a conclusion that is absurd:
+That is, we'd like to have the suffix-appended prompt generate anything we'd like to, no matter how ridiculous.
+For instance:
 
+**LLM (Prompt + Adv. Suffix):**
+I have String, and so I can create Gray Dye.
+I cannot create any other items.
+{: .notice--danger}
+
+
+<!--
 $$
   \{A,D\}
   \xrightarrow{\mathcal{R}} \{F\}
   \xrightarrow{\mathcal{R}} \{B,C,E\}
   \xrightarrow{\mathcal{R}} \cdots
 $$
+-->
 
-**LLM (with adv. suffix):**
-I have String, and so I can create Gray Dye.
-I cannot create any other items.
-{: .notice--info}
-
-
-Of these three failure modalities, we focus on **rule suppression**, which is most closely related to jailbreak attacks, and refer to our paper for additional discussion on fact amnesia and state coercion.
+In this post, we focus on **rule suppression**, which is most closely related to jailbreak attacks.
 
 
 ## Subverting Inference in Transformers (Theory)
 
-To better understand how these attacks might function in large language models, we first study a simplified theoretical setting.
-We show that small transformers have the capacity to encode and learn propositional Horn inference, and that attacks designed against theory models transfer to models that learn to reason under the constraints imposed by the theory.
+To better understand how adversarial suffixes affect LLMs, we first study how such models might reason in a simplified theoretical setting.
+By studying rule-following in a simpler setting, we can more easily construct attacks that induce each of the three failure modes.
+Interestingly, these theory-based attacks also transfer to models learned from data.
 
 
-### Small Transformers Can Encode and Learn Inference
+### Small Transformers Can Encode and Learn Rule-following
 
-We first show that even small transformers have both the capacity to encode and learn propositional inference.
-Our core idea is to use transformers to approximate the Boolean circuits traditionally used in inference tasks, such as those of propositional Horn inference.
+We first consider whether a transformer can even perform inference in propositional Horn logic, and if so, how this might be done.
+We show that, in fact, a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to do just this.
+The main idea is as follows:
+* Propositional Horn logic is Boolean-valued, so inference can be implemented via a Boolean circuit.
+* A one-layer transformer has the theoretical capacity to approximate this circuit; more layers means more power.
+* Therefore, a (transformer-based) language model can also perform propositional inference **assuming** its weights behave like the "correct" Boolean circuit.
 
+We illustrate this in the following.
 
 {% include gallery id="gallery_main_idea" caption="The main theoretical idea." %}
 
+
+<!--
 Particularly, for a reasoning problem with at most $n$ propositions, we use an embedding dimension of $d = 2n$.
 Following our running Minecraft example with $n = 6$ proposition, we embed the rule $C \land E \to F$ as follows:
 
 $$
-  (C \land E \to F)
-  \; \cong \;
-  (001010,000001)
-  \in \{0,1\}^{12}
+  (C \land E \to F) \; \cong \; (001010,000001)  \in \{0,1\}^{12}
 $$
 
 Intuitively, the first $n = 6$ bits encode the antecedent of the rule, while the remaining $n$ bits encode the consequent.
@@ -311,27 +326,33 @@ $$
 $$
 
 In particular, a small reasoner model suffices to encode each step of this autoregressive inference procedure.
+-->
 
+More concretely, our encoding result is as follows.
 
 **Theorem.** (Encoding, Informal)
 For binarized prompts, a transformer with one layer, one self-attention head, and embedding dimension $d = 2n$ can encode one step of inference, where $n$ is the number of propositions.
 {: .notice--success}
 
 
-A caveat is that this is a result about existence: it shows that transformers of a certain size have the sufficient capacity to encode one step of inference.
-Our paper gives additional details of the proof, in which we explicitly specify all the parameter values of a transformer such that it is able to implement the inference circuit.
-Our transformer encoding is not the only one in the [literature](https://arxiv.org/abs/2205.11502), but it is the smallest to our knowledge, which is generally an advantage for theoretical analysis.
+We emphasize that this is a theoretical result about **capacity**: it states that transformers of a certain size have the ability to perform one step of inference.
+However, it is not clear how to certify whether such transformers are guaranteed to learn the "correct" set of weights.
+Nevertheless, such results are useful because they allow us to better understand what a model is theoretically capable of.
+Our theoretical construction is not the only one in the [literature](https://arxiv.org/abs/2205.11502), but it is the smallest to our knowledge, which is generally an advantage for theoretical analysis.
 
 
-So can transformer of such sizes *actually learn*?
-Our experiments show that models at our theoretically-restricted sizes can still learn propositional inference to a high accuracy.
+Although we don't know how to provably guarantee that a transformer learns the correct weights, we can empirically evaluate the performance of learned models.
+By fixing an architecture of one layer and one self-attention head while varying the number of propositions and embedding dimensions, we see that models subject to our theoretical constraints **can** learn inference to a high accuracy.
 
 {% include gallery id="gallery_learned_accs" caption="Small transformers can learn propositional inference to high accuracy. Left, center, and right are the accuracies for $t = 1, 2, 3$ steps of inference, respectively. A model must correctly predict the state of all $n$ propositions up to $t$ steps to be counted as correct." %}
 
+In particular, we observe that models of size $d \geq 2n$ can consistently learn propositional inference to high accuracy, whereas those at $d < 2n$ begin to struggle.
+These experiments provide evidence that our theoretical setup of $d = 2n$ is not a completely unrealistic setup on which to study rule-following.
+It is an open problem to better understand the training dynamics and to verify whether these models provably succeed in achieving the "correct" weights.
 
-We observe that models of size $d \geq 2n$ can consistently learn propositional inference to high accuracy, whereas those at $d < 2n$ begin to struggle.
-Although a one-layer and one-head transformer is fairly small, these empirical findings suggest that our theoretical construction is not a completely unrealistic setup on which to study attacks on rule-following.
+<!--
 We remark that it is an open problem to better understand the training dynamics and verify whether these learned models succeed in achieving a *correct* solution.
+-->
 
 
 ### Theory-based Attacks Transfer to Learned Models

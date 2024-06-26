@@ -78,7 +78,7 @@ Developers and users commonly use prompts to specify what LLMs should and should
 Although this strategy is generally effective, it is also exploitable, most notably by *jailbreak attacks*.
 Such attacks work by appending the prompt with an **adversarial suffix**, a malicious sequence of tokens that tricks the model into generating undesirable content.
 For example, a developer-given safety prompt might instruct the LLM to not provide bomb-building instructions, but a carefully crafted suffix can bypass this safeguard.
-However, the principles of why such exploits work, as well as how to engineer and prevent them, are poorly understood.
+Although there is much interest in jailbreak attacks, the principles of why such exploits work, as well as how to engineer and prevent them, are poorly understood.
 
 
 In this blog, we examine how to subvert LLMs from following the rules specified in the prompt.
@@ -160,7 +160,7 @@ Because these reference algorithms have nice mathematical properties, an LLM out
 
 ### Rule-following via Forward Chaining
 
-As a reference algorithm, we use [forward chaining](https://en.wikipedia.org/wiki/Forward_chaining), which is a well-known strategy for inference in propositional Horn logic.
+As a reference algorithm, we use [forward chaining](https://en.wikipedia.org/wiki/Forward_chaining), which is a well-known algorithm for inference in propositional Horn logic.
 Given the task, the main idea is to first extract a set of rules $\Gamma$ and known facts $\Phi$ as follows:
 
 $$
@@ -191,8 +191,8 @@ The iterative nature of forward chaining is particularly amenable to LLMs, which
 So what does it mean for an LLM to *not* follow the rules?
 Following our earlier idea, we say that an LLM fails to follow the rules if its output does not "match" that of forward chaining.
 However, a major difference between LLM execution and forward chaining is that an LLM generates its output step-by-step, whereas forward chaining keeps track of all the derivable facts at each step.
-We give additional discussion in our paper about what it means for these two outputs to match, where we identify three different modalities in which they may *fail* to match.
-An adversarial suffix can then target these specific behaviors, which we describe below.
+**Crucially, we identify three ways in which the outputs may fail to match.**
+An adversarial suffix can then specifically target these erroneous behaviors, described below.
 
 
 **(1) Rule suppression**: a rule and its dependents are ignored.
@@ -253,10 +253,9 @@ $$
   \xrightarrow{\mathcal{R}} \{B,C,E\}
   \xrightarrow{\mathcal{R}} \cdots
 $$
--->
 
 In this post, we focus on **rule suppression**, which is most closely related to jailbreak attacks.
-
+-->
 
 ## Subverting Inference in Transformers (Theory)
 
@@ -265,7 +264,7 @@ By studying rule-following in a simpler setting, we can more easily construct at
 Interestingly, these theory-based attacks also transfer to models learned from data.
 
 
-### Small Transformers Can Encode and Learn Rule-following
+### Small Models Can Encode and Learn Rule-following
 
 We first consider whether a transformer can even perform inference in propositional Horn logic, and if so, how this might be done.
 We show that, in fact, a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to do just this.
@@ -335,7 +334,7 @@ For binarized prompts, a transformer with one layer, one self-attention head, an
 {: .notice--success}
 
 
-We emphasize that this is a theoretical result about **capacity**: it states that transformers of a certain size have the ability to perform one step of inference.
+We emphasize that this is a result about **theoretical capacity**: it states that transformers of a certain size have the ability to perform one step of inference.
 However, it is not clear how to certify whether such transformers are guaranteed to learn the "correct" set of weights.
 Nevertheless, such results are useful because they allow us to better understand what a model is theoretically capable of.
 Our theoretical construction is not the [only one](https://arxiv.org/abs/2205.11502), but it is the smallest to our knowledge.
@@ -361,7 +360,7 @@ We remark that it is an open problem to better understand the training dynamics 
 Our simple analytical setting allows us to derive attacks that can provably induce rule suppression, fact amnesia, and state coercion.
 As an example, suppose that we would like to suppress some rule $\gamma$ in the (embedded) prompt $X \in \mathbb{R}^{N \times d}$.
 Given an *attack budget* $p > 0$, the objective is to find an adversarial suffix $\Delta \in \mathbb{R}^{p \times d}$ that, when appended to $X$, causes the reasoner $\mathcal{R}$ to suppress attention on $\gamma$.
-That is, the task of finding an adversarial suffix for rule suppression may be stated as:
+We may think about this rule suppression task as follows:
 
 $$
 \begin{aligned}
@@ -421,13 +420,15 @@ We show one such example below, where we plot the **difference** in attention be
 {% include gallery id="gallery_mc_suppression" caption="The difference in attention weights between a generation with and without the adversarial suffix. When the suffix is present, the tokens of the targeted rule receive lower attention than when the suffix is absent." %}
 
 Although the above is only one example, we found a general trend in that GCG-found suffixes for rule suppression do, on average, significantly diminish attention on the targeted rule.
-Similarities for real jailbreaks and theory-based setups also exist for our two other failure modes.
-For both fact amnesia and state coercion, for instance, the theory predicts that certain tokens should more frequently appear in the adversarial suffix.
-In fact, this is the case for GCG-found suffixes.
+Similarities for real jailbreaks and theory-based setups also exist for our two other failure modes: for both fact amnesia and state coercion, GCG-found suffixes frequently contain theory-predicted tokens.
 We report additional experiments and discussion in our paper, where our findings suggest a connection between real jailbreaks and our theory-based attacks.
+
+
+Our paper also contains additional experiments with the larger Llama-2 model, where similar behaviors are observed, especially for rule suppression.
 
 
 
 ## Conclusion
 We use propositional Horn logic as a framework to study how to subvert the rule-following of language models.
-We find that attacks derived in a simple, theoretical setting are mirrored in real jailbreaks against LLMs.
+We find that attacks derived from our theory are mirrored in real jailbreaks against LLMs.
+Our work suggests that analyzing simplified, theoretical setups can be useful for understanding LLMs.

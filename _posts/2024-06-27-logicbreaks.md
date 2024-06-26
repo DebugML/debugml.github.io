@@ -106,7 +106,7 @@ In summary:
 * Existing LLM jailbreaks mirror these theory-based attacks.
 
 
-{% include gallery id="gallery_results_overview" caption="An overview of our results." %}
+{% include gallery id="gallery_results_overview" caption="An overview of our results. We devise jailbreak attacks in a simplified theoretical setting that transfer to learned reasoners. Moreover, real jailbreaks on real LLMs exhibit similar strategies as our theory-based setup." %}
 
 
 ## A Logic-based Framework for Rule-following
@@ -117,7 +117,7 @@ As a running example, we consider the task of crafting items in [Minecraft](http
 For instance, a player may have the following recipe list and starting items:
 
 
-{% include gallery id="gallery_mc_example" caption="Crafting items in Minecraft." %}
+{% include gallery id="gallery_mc_example" caption="Crafting items in Minecraft. Given a recipe list and some starting items, what items can the player make?" %}
 
 
 Encountered with this task, the player might formulate the following prompt:
@@ -182,8 +182,8 @@ $$
 $$
 
 The core component of forward chaining is $\mathsf{Apply}[\Gamma]$, which performs a one-step application of all the rules in $\Gamma$.
-The algorithm terminates when it reaches a *proof state* like, $\\{A,B,C,D,E,F\\}$, from which no new facts can be derived.
-The iterative nature of forward chaining is particularly amenable to LLMs, which commonly use techniques like chain-of-thought to autoregressively generate their output.
+The algorithm terminates when it reaches a *proof state* like $\\{A,B,C,D,E,F\\}$ from which no new facts can be derived.
+The iterative nature of forward chaining is particularly amenable to LLMs, which commonly use techniques like chain-of-thought to generate their output step-by-step.
 
 
 ### Subversions on Rule-following
@@ -272,11 +272,11 @@ We show that, in fact, a transformer with only **one layer** and **one self-atte
 The main idea is as follows:
 * Propositional Horn logic is Boolean-valued, so inference can be implemented via a Boolean circuit.
 * A one-layer transformer has the theoretical capacity to approximate this circuit; more layers means more power.
-* Therefore, a (transformer-based) language model can also perform propositional inference **assuming** its weights behave like the "correct" Boolean circuit.
+* Therefore, a (transformer-based) language model can also perform propositional inference assuming that its weights behave like the "correct" Boolean circuit.
 
 We illustrate this in the following.
 
-{% include gallery id="gallery_main_idea" caption="The main theoretical idea." %}
+{% include gallery id="gallery_main_idea" caption="The main theoretical encoding idea. A propositional Horn query may be equivalently formulated as Boolean vectors, which may then be solved via Boolean circuits. A language model has the theoretical capacity to encode/approximate such an idealized circuit." %}
 
 
 <!--
@@ -338,7 +338,8 @@ For binarized prompts, a transformer with one layer, one self-attention head, an
 We emphasize that this is a theoretical result about **capacity**: it states that transformers of a certain size have the ability to perform one step of inference.
 However, it is not clear how to certify whether such transformers are guaranteed to learn the "correct" set of weights.
 Nevertheless, such results are useful because they allow us to better understand what a model is theoretically capable of.
-Our theoretical construction is not the only one in the [literature](https://arxiv.org/abs/2205.11502), but it is the smallest to our knowledge, which is generally an advantage for theoretical analysis.
+Our theoretical construction is not the [only one](https://arxiv.org/abs/2205.11502), but it is the smallest to our knowledge.
+A small size is generally an advantage for theoretical analysis and, in our case, allows us to more easily derive attacks against our theoretical construction.
 
 
 Although we don't know how to provably guarantee that a transformer learns the correct weights, we can empirically evaluate the performance of learned models.
@@ -357,27 +358,28 @@ We remark that it is an open problem to better understand the training dynamics 
 
 ### Theory-based Attacks Transfer to Learned Models
 
-We next show that our theory-based models can be attacked, and that such attacks transfer to learned models.
-As stated before, a key advantage of our construction is its size, which lets us manually construct attacks against all three modalities of inference failure --- rule suppression, fact amnesia, and state coercion --- that are guaranteed to succeed.
-As an example, suppose that we would like to suppress the activation of some target rule $(\alpha_{\mathsf{tgt}}, \beta_{\mathsf{tgt}}) \in \Gamma$.
-Given an attack budget $p > 0$, the objective is to find an adversarial suffix $\Delta \in \mathbb{R}^{p \times d}$ that, when appended to $X_0 = \mathsf{Encode}(\Gamma, \Phi)$, causes the reasoner $\mathcal{R}$ to place low attention on the targeted rule.
-We may roughly formulate this as the following problem:
+Our simple analytical setting allows us to derive attacks that can provably induce rule suppression, fact amnesia, and state coercion.
+As an example, suppose that we would like to suppress some rule $\gamma$ in the (embedded) prompt $X \in \mathbb{R}^{N \times d}$.
+Given an *attack budget* $p > 0$, the objective is to find an adversarial suffix $\Delta \in \mathbb{R}^{p \times d}$ that, when appended to $X$, causes the reasoner $\mathcal{R}$ to suppress attention on $\gamma$.
+That is, the task of finding an adversarial suffix for rule suppression may be stated as:
 
 $$
 \begin{aligned}
   \underset{\Delta \in \mathbb{R}^{p \times d}}{\text{minimize}}
-    &\quad \text{Attention that $\mathcal{R}$ places on $(\alpha_{\mathsf{tgt}}, \beta_{\mathsf{tgt}})$} \\
+    &\quad \text{The attention that $\mathcal{R}$ places on $\gamma$} \\
   \text{where}
-    &\quad \text{$\mathcal{R}$ is evaluated on $\mathsf{append}(X_0, \Delta)$} \\
-    &\quad X_0 = \mathsf{Encode}(\Gamma, \Phi)
+    &\quad \text{$\mathcal{R}$ is evaluated on $\mathsf{append}(X, \Delta)$} \\
 \end{aligned}
 $$
 
-In fact, it is possible to explicitly find such a suffix $\Delta$ for all three modalities of attacks.
+In fact, fo reach of the three failure modalities, it is possible to find such an adversarial suffix $\Delta$.
 
 **Theorem.** (Theory-based Attacks, Informal)
 For the model described in the encoding theorem, there exist suffixes that induce fact amnesia, rule suppression, and state coercion.
 {: .notice--success}
+
+
+
 
 
 
@@ -386,53 +388,44 @@ But how do such attacks transfer to *learned models*, i.e., models with the same
 Interestingly, the learned reasoners are also susceptible to theory-based rule suppression and fact amnesia attacks.
 
 
-{% include gallery id="gallery_theory_attacks" caption="With some modifications, the theory-based rule suppression and fact amnesia attacks achieve a high attack success rate. The state coercion does not succeed even with our modifications, but attains a 'converging' behavior as evidenced by the diminishing variance. The number of 'repetitions' is a measure of how 'strong' the attack is." %}
+{% include gallery id="gallery_theory_attacks" caption="With some modifications, the theory-based rule suppression and fact amnesia attacks achieve a high attack success rate. The state coercion does not succeed even with our modifications, but attains a 'converging' behavior as evidenced by the diminishing variance. The 'Number of Repeats' is a measure of how 'strong' the attack is. Interestingly making the attack 'stronger' has diminishing returns against learned models." %}
 
 
 
 ## Real Jailbreaks Mirror Theory-based Ones
 We have previously considered how theoretical jailbreaks might work against simplified models that take a binarized representation of the prompt.
 It turns out that such attacks transfer to real jailbreak attacks as well.
-For this task, we fine-tuned GPT-2 models on a set of Minecraft recipes curated from [GitHub](https://github.com/joshhales1/Minecraft-Crafting-Web/).
+For this task, we fine-tuned GPT-2 models on a set of Minecraft recipes curated from [GitHub](https://github.com/joshhales1/Minecraft-Crafting-Web/) --- which are similar to the running example above.
 A sample input is as follows:
 
 
 **Prompt:**
-Here are some crafting recipes: If I have Sheep, then I can create Wool. If I have Wool,
-then I can create String. If I have Log, then I can create Stick. If I have String and Stick,
-then I can create Fishing Rod. If I have Brick, then I can create Stone Stairs. Here are
-some items I have: I have Sheep and Log. Based on these items and recipes, I can create
+Here are some crafting recipes:
+If I have Sheep, then I can create Wool.
+If I have Wool, then I can create String.
+If I have Log, then I can create Stick.
+If I have String and Stick, then I can create Fishing Rod.
+If I have Brick, then I can create Stone Stairs.
+Here are some items I have: I have Sheep and Log.
+Based on these items and recipes, I can create
 the following:
 {: .notice--info}
 
-The attacker's objective is to find an adversarial suffix that induces some inference error.
-For instance, the following would be a valid rule suppression behavior of *"If I have Wool, then I can create String"*:
 
-
-**LLM(Prompt + XXX):**
-I have Sheep, and so I can create Wool.
-I have Log, and so I can create Stick.
-I cannot create any other items.
-{: .notice--info}
-
-
-Observe that all dependents of Wool are absent from the output, as the next applicable rule is never triggered.
-We use the [Greedy Coordinate Gradients](https://arxiv.org/abs/2307.15043) (GCG) algorithm to find such suffixes for language models.
-Notably, the suffixes found by GCG also use an attention-suppression mechanism as explored in our theory.
-For instance, below is an example of the *difference* in attention between an attacked (with suffix) and a non-attacked (without suffix) output generation.
-
+This is a more complicated version of our earlier running example, but is closer to how our actual dataset is constructed.
+For attacks, we adapted the reference implementation of the [Greedy Coordinate Gradients](https://github.com/llm-attacks/llm-attacks) (GCG) algorithm to find adversarial suffixes.
+Notably, the suffixes that GCG finds use similar strategies as ones explored in our theory.
+As an example, the GCG-found suffix for rule suppression significantly reduces the attention placed on the targeted rule.
+We show one such example below, where we plot the **difference** in attention between an attacked (with adv. suffix) and a non-attacked (without suffix) case:
 
 {% include gallery id="gallery_mc_suppression" caption="The difference in attention weights between a generation with and without the adversarial suffix. When the suffix is present, the tokens of the targeted rule receive lower attention than when the suffix is absent." %}
 
-We give additional details in our paper on how the attention is aggregated.
-However, the general trend is that GCG finds suffixes that suppress the attention placed on the targeted rule.
+Although the above is only one example, we found a general trend in that GCG-found suffixes for rule suppression do, on average, significantly diminish attention on the targeted rule.
+Similarities for real jailbreaks and theory-based setups also exist for our two other failure modes.
+For both fact amnesia and state coercion, for instance, the theory predicts that certain tokens should more frequently appear in the adversarial suffix.
+In fact, this is the case for GCG-found suffixes.
+We report additional experiments and discussion in our paper, where our findings suggest a connection between real jailbreaks and our theory-based attacks.
 
-
-<!--
-In summary, our results here are as follows
-* POINT 2
-* POINT 3
--->
 
 
 ## Conclusion

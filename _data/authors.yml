@@ -248,6 +248,12 @@ Adam Stein:
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://seas.upenn.edu/~steinad"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/adamlsteinl"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/adaminsky"
 
 Li Zhang:
   name             : "Li Zhang"

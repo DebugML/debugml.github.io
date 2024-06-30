@@ -9,7 +9,7 @@ header:
   teaser: assets/images/compositional_concepts/birds_hands.jpg
   actions:
     - label: "Paper"
-      url: "https://arxiv.org/abs/"
+      url: "https://arxiv.org/abs/2406.18534"
     - label: "Code"
       url: "https://github.com/adaminsky/compositional_concepts"
 authors: 
@@ -83,9 +83,14 @@ image-selector-image1-0:
 <script type="text/javascript" async
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 
-> *Concept-based interpretability linearly decomposes a model’s hidden representation into vectors corresponding to human-interpretable concepts, but do these concepts really compose? In our recent paper, we investigate this question and find that foundation models represent compositional concepts, such as “white bird” and “small bird”, in a way supporting composition, but existing concept learning methods do not find such concepts. We propose Compositional Concept Extraction (CCE) as a way to encourage the learning of such compositional concept representations.*
+> *Concept-based interpretability represents human-interpretable concepts such as "white bird" and "small bird" as vectors in the embedding space of a deep network. But do these concepts really compose together? It turns out that existing methods find concepts that behave unintuitively when combined. To address this, we propose Compositional Concept Extraction (CCE), a new concept learning approach that encourages concepts that linearly compose.*
+
+To describe something complicated we often rely on explanations using simpler components. For instance, a small white bird can be described by separately describing what small birds and white birds look like. This is the *principle of compositionality* at work!
 
 <figure>
     <style>
@@ -150,17 +155,15 @@ image-selector-image1-0:
             </div>
         </div>
     </div>
-    <figcaption>Depiction of concepts discovered by PCA from the CLIP image representation of the bird images in the CUB dataset. The concept representation is depicted using the two images with the largest cosine similarity with the concept. The shown concepts correspond to the "color: white" and "size: 3-5in" annotations provided by the dataset, but composing the concepts through addition results in an unidentifiable concept.</figcaption>
+    <figcaption>PCA-based concepts for the CLIP model do not compose.</figcaption>
 </figure>
 
-To describe something complicated we often rely on explanations using simpler components. For instance, a [brachiosaurus](https://brachiolab.github.io/) is a dinosaur which looks like a mixture of a lizard and a giraffe, and a dog is an animal with four legs, a tail, fur, and a snout. This is the *principle of compositionality* at work!
 
-A promising method for understanding deep neural networks is to similarly break down their complex behavior into human-understandable components called concepts. Interestingly, past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. ascribe human-interpretable concepts such as "fur" and "snout" to the features learned by modern deep learning models. The example above shows the concepts "color: white" and "size: 3-5in" which are discovered by an existing technique for the CLIP model on a dataset composed of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)).
+<!-- a [brachiosaurus](https://brachiolab.github.io/) is a dinosaur which looks like a mixture of a lizard and a giraffe, and a dog is an animal with four legs, a tail, fur, and a snout. This is the *principle of compositionality* at work! -->
 
-Many prior works, such as [IBD](https://openaccess.thecvf.com/content_ECCV_2018/papers/Antonio_Torralba_Interpretable_Basis_Decomposition_ECCV_2018_paper.pdf) from Zhou et. al. and recently [TextSpan](https://openreview.net/pdf?id=5Ca9sSzuDp) from Gandelsman et. al., use these discovered concepts to approximately reconstruct the hidden representation of a model. This means that an image of a dog should be roughly encoded as a sum of the concept representations for "fur", "snout", "four legs", and "tail".
-In the example of concepts shown at the top of the page for the PCA method, we see that the individual concepts look reasonable, while composing the concept representations with addition produces an unidentifiable concept (it seems to be neither white nor small birds) which we label "?".
+The concepts of "small bird" and "white bird" can be ascribed to the features learned by deep networks. Past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. explore the mapping of human-interpretable concepts to the features learned by deep networks. In the first two columns of the above figure, we show the "white bird" and "small bird" concepts discovered in the hidden representations from [CLIP](https://arxiv.org/abs/2103.00020) by [PCA](https://arxiv.org/pdf/2310.01405) on a dataset of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)).
+The individual concepts look reasonable, but their composition is clearly not "small white birds". We expect the composition of the two concepts corresponds to a new concept representing "small white birds" as shown in the following example.
 
-Our method, which we introduce later, does in fact discover concepts which compose through addition:
 <figure>
     <style>
         .container {
@@ -225,18 +228,23 @@ Our method, which we introduce later, does in fact discover concepts which compo
             </div>
         </div>
     </div>
-<figcaption>Depiction of concepts discovered by our method (CCE) on the same dataset as used for the previous figure. These concepts not only show the individual concepts of "color: white" and "size: 3-5in", but their composition through addition also corresponds to the composition of the concepts. The small white birds shown on the right are annotated as small and white in the dataset.</figcaption>
+<figcaption>Our method (CCE) discovers concepts which compose.</figcaption>
 </figure>
 
+We achieve this by first understanding the properties of compositional concepts in the embedding space of deep networks and then proposing a method to discover such concepts.
 
-## Experiments Using Controlled Datasets
+## Compositional Concept Representations
 
-We define a concept as a set of *symbols*, such as the concept $$\{``\text{tail"}\}$$ which we denote as $$``\text{tail"}$$ for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concepts names and $$\mathbb{R}^d$$ is an embedding space in some dimension $$d$$. Since concepts are defined as sets, we allow them to be composed through the union operator such that $$``\text{four legs and tail"} = ``\text{four legs"} \cup ``\text{tail"}$$. Therefore, compositional concept representations mean that concept representations should compose through addition whenever concepts compose through the union, or that:
+We define a concept as a set of *symbols*, such as the concept $$\{``\text{tail"}\}$$ which we denote as $$``\text{tail"}$$ for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concept names and $$\mathbb{R}^d$$ is an embedding space with dimension $$d$$.
+
+Since concepts are defined as sets, they compose through the union operator such that $$``\text{small white bird"} = ``\text{small bird"} \cup ``\text{white bird"}$$. While concepts compose through the union, concept representations compose through vector addition. Therefore, we define *compositional concept representations* to mean concept representations which compose through addition whenever their corresponding concepts compose through the union, or that:
 
 **Definition:** For concepts $$c_i, c_j \in \mathbb{C}$$, the concept representation $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ is compositional if for some $$w_{c_i}, w_{c_j}\in \mathbb{R}^+$$,
 $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
 {: .notice--info}
 
+
+## Experiments Using Controlled Datasets
 
 Given these definitions, we start from the case where we have data with known concepts names (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
 
@@ -249,14 +257,110 @@ Our main finding from the ground truth concept representations for each bird siz
 
 <!-- <Heatmap> -->
 <!-- ![GT Orthogonality](assets/gt_orthogonality.jpg) -->
-{% include gallery id="gt_orthogonality" layout="" caption="Cosine similarities of all pairs of concepts. We can see that concepts within an attribute (red, green, and blue or sphere, cube, and cylinder) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are all nearly zero." %}
+<!-- {% include gallery id="gt_orthogonality" layout="" caption="Cosine similarities of all pairs of concepts. We can see that concepts within an attribute (red, green, and blue or sphere, cube, and cylinder) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are all nearly zero." %} -->
 
-**Observation:** The concept pairs of the same attribute have non-zero cosine similarity, while cross-attribute pairs have nearly zero cosine similarity, implying orthogonality.
+<figure>
+<div class="chartcontainer" style="width: 400px; height: 400px; margin-bottom: 10px; margin: auto">
+    <canvas id="matrix-chart" width="300" height="300"></canvas>
+</div>
+<figcaption>Cosine similarities of all pairs of concepts. Concepts within an attribute (brown, white, and black or small, medium, and large) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are close to zero.</figcaption>
+</figure>
+<script>
+    const labels = ['brown', 'white', 'black', 'small', 'medium', 'large'];
+    const data = [
+        [1.00, -0.53, -0.26, 0.33, -0.26, -0.32],
+        [-0.53, 1.00, -0.68, -0.28, 0.24, 0.26],
+        [-0.26, -0.68, 1.00, 0.04, -0.06, -0.01],
+        [0.33, -0.28, 0.04, 1.00, -0.87, -0.90],
+        [-0.26, 0.24, -0.06, -0.87, 1.00, 0.56],
+        [-0.32, 0.26, -0.01, -0.90, 0.56, 1.00]
+    ];
+
+    const chartData = data.flatMap((row, y) => 
+        row.map((value, x) => ({x, y, v: value}))
+    );
+
+    const chart = new Chart('matrix-chart', {
+        type: 'matrix',
+        plugins: [ChartDataLabels],
+        data: {
+            datasets: [{
+                label: 'Correlation Matrix',
+                data: chartData,
+                borderWidth: 1,
+                borderColor: 'white',
+                backgroundColor: (context) => {
+                    const value = context.dataset.data[context.dataIndex].v;
+                    const alpha = Math.abs(value);
+                    return value < 0 
+                        ? `rgba(0, 0, 255, ${alpha})`  // Blue for negative
+                        : `rgba(0, 0, 255, ${alpha})`  // Blue for negative
+                },
+                width: ({chart}) => (chart.chartArea || {}).width / 6 - 1,
+                height: ({chart}) => (chart.chartArea || {}).height / 6 - 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: {
+                    ticks: {
+                        callback: (value) => labels[value],
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    offset: true,
+                    reverse: true,
+                    ticks: {
+                        callback: (value) => labels[value],
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: () => '',
+                        label: (context) => {
+                            const value = context.dataset.data[context.dataIndex].v;
+                            return `${value.toFixed(2)}`;
+                        }
+                    }
+                },
+                datalabels: {
+                        display: true,
+                        color: 'black',
+                        font: {
+                            weight: 'bold'
+                        },
+                        formatter: (value) => value.v.toFixed(2),
+                        textAlign: 'center',
+                        textStrokeColor: 'white',
+                        textStrokeWidth: 0,
+                        anchor: 'center',
+                        clip: true
+                }
+            }
+        }
+    });
+</script>
+
+
+**Observation:** The concept pairs of the same attribute have non-zero cosine similarity, while cross-attribute pairs have close to zero cosine similarity, implying orthogonality.
 {: .notice--info}
 
 We now see why existing concept learning methods find concepts which do not compose correctly through addition. Existing methods either impose too strong or too weak of a constraint on the orthogonality of discovered concepts. For instance, PCA requires that all concepts are orthogonal to each other, but concepts like “white” and “black” should not be orthogonal. On the other hand, methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality, which means concepts such as “black” and “small” may not be orthogonal.
 
-While we show that the ground truth concepts display certain orthogonality structure, does that mean that concept representations must also display such structure to be compositional through addition? In our paper, we prove the answer is yes in a simplified setting!
+While the ground truth concept representations display this orthogonality structure, must all compositional concept representations mimick this structure? In our paper, we prove the answer is yes in a simplified setting!
 
 <!-- We show a toy example below where we first show how concepts which follow the described orthogonality structure compose correctly, while a set of concepts which do not follow such structure exhibit unexpected compositions. In addition, the individual concept representations still perfectly discriminate between the individual concepts, so looking at each concept independently would mislead us to believe we have learned the correct concepts. -->
 
@@ -268,11 +372,15 @@ Given these findings, we next outline our method for finding compositional conce
 
 {% include gallery id="method" layout="" caption="Depiction of our method. There are two high level components, LearnSubspace and LearnConcepts, which are performed jointly to produce one set of concepts. Then we orthogonally project away those concepts from the embedding space, and repeat the process." %}
 
-How do we learn compositional concept representations from a pretrained model? Our findings from the synthetic experiments described above show that compositional concepts will be represented such that concepts from different attributes are orthogonal to each other while concepts of the same attribute may not be orthogonal. To create this compositionality structure, we use an unsupervised iterative orthogonal projection approach.
+Our findings from the synthetic experiments show that compositional concepts should be represented such that concepts from different attributes are orthogonal to each other while concepts of the same attribute may not be orthogonal. To create this structure, we use an unsupervised iterative orthogonal projection approach.
 
-As shown in the diagram above, CCE has two high level components of *LearnSubspace* and *LearnConcepts* which result in a set of concepts corresponding to one attribute after one iteration and further attributes in additional iterations. The goal of the LearnConcepts step is to find a set of concepts in a subspace $$P$$ while the LearnSubspace step tries to find an optimal subspace where given concepts are maximally clustered. These steps are mutually dependent, so we jointly learn both the subspace $$P$$ and the concepts within the subspace.
+First, orthogonality between groups of concepts is enforced through orthogonal projection. Once we find one set of concept representations (which may correspond to different values of an attribute such as different colors) we project away the subspace which they span from the model's embedding space, so that all further discovered concepts are orthogonal to the concepts which were within the subspace.
 
-Running one iteration of CCE results in a subspace $$P$$ and a set of concepts within that subspace. For the next iteration of CCE, we remove the subspace $$P$$ from the embedding space and repeat the algorithm. This removal process guarantees that all concepts discovered in iteration $$i$$ are orthogonal to all concepts discovered in iterations $$j < i$$. This mirrors the orthogonality structure we previously described since concepts within one discovered subspace may not be orthonal, but the concepts in different subspaces will be orthogonal. Therefore, CCE is an unsupervised alorithm for finding concepts divided into orthogonal subspaces.
+To find the concepts within a subspace, we jointly find a subspace (with *LearnSubspace*) and a set of concepts (with *LearnConcepts*) as shown in the figure above. Given a subspace $$P$$, the the LearnConcepts step finds a set of concepts within $$P$$ which are well clustered. On the other hand, the LearnSubspace step is given a set of concept representations and tries to find an optimal subspace in which the given concepts are maximally clustered. Since these steps are mutually dependent, we jointly learn both the subspace $$P$$ and the concepts within the subspace.
+
+The full algorithm operates by finding a subspace and concepts within the subspace, then projecting away the subspace from the model's embedding space and repeating. All subspaces are therefore mutually orthogonal, but the concepts within one subspace may not be orthogonal, as desired.
+
+<!-- Running one iteration of CCE results in a subspace $$P$$ and a set of concepts within that subspace. For the next iteration of CCE, we remove the subspace $$P$$ from the embedding space and repeat the algorithm. This removal process guarantees that all concepts discovered in iteration $$i$$ are orthogonal to all concepts discovered in iterations $$j < i$$. This mirrors the orthogonality structure we previously described since concepts within one discovered subspace may not be orthonal, but the concepts in different subspaces will be orthogonal. Therefore, CCE is an unsupervised alorithm for finding concepts divided into orthogonal subspaces. -->
 
 
 ## Discovering New Concepts
@@ -474,13 +582,80 @@ Examples of concepts on language data:
 <li class="active">
 <!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
 
-{% include gallery id="nlp_qual1" layout="" caption="" %}
+<div style="display: flex; flex-direction: column; width: 100%; max-width: 800px; margin: 20px auto; padding: 10px; box-sizing: border-box; position: relative; font-size: 14px;">
+  <div style="display: flex; margin-bottom: 10px;">
+    <div style="flex: 1; text-align: center; font-weight: bold;">Text Ending in "..."</div>
+    <div style="flex: 1; text-align: center; font-weight: bold;">Sports</div>
+    <div style="flex: 1; text-align: center; font-weight: bold;">Sports text ending in "..."</div>
+  </div>
+  <div style="display: flex; align-items: stretch;">
+    <div style="flex: 1; display: flex; flex-direction: column; margin-right: 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #ffffff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Hopefully, he doesn't take it personal...</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #ffffff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 5px 0 0 0;">Hi there, maybe you can help me...</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 24px; margin: 0 10px;">+</div>
+    <div style="flex: 1; display: flex; flex-direction: column; margin: 0 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #fffacd; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">If I were Pat Burns I'd throw in the towel. The wings dominated every aspect of the game.</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #fffacd; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Quebec dominated Habs for first 2 periods and only Roy kept this one from being rout, although he did blow 2nd goal.</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 24px; margin: 0 10px;">=</div>
+    <div style="flex: 1; display: flex; flex-direction: column; margin-left: 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #e6f3ff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Grant Fuhr has done this to a lot better coaches than Brian Sutter...</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #e6f3ff; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">No, although since the Lavalliere weirdness, nothing would really surprise me. Jeff King is currently in the top 10 in the league in *walks*. Something is up...</p>
+      </div>
+    </div>
+  </div>
+</div>
 </li>
 
 <li class="">
-<!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
 
-{% include gallery id="nlp_qual2" layout="" caption="" %}
+<div style="display: flex; flex-direction: column; width: 100%; max-width: 800px; margin: 20px auto; padding: 10px; box-sizing: border-box; position: relative; font-size: 14px;">
+  <div style="display: flex; margin-bottom: 10px;">
+    <div style="flex: 1; text-align: center; font-weight: bold;">Asking for suggestions</div>
+    <div style="flex: 1; text-align: center; font-weight: bold;">Items for sale</div>
+    <div style="flex: 1; text-align: center; font-weight: bold;">Asking for purchasing suggestions</div>
+  </div>
+  <div style="display: flex; align-items: stretch;">
+    <div style="flex: 1; display: flex; flex-direction: column; margin-right: 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #ffffff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">HELP!<br>I am trying to find software that will allow COM port redirection [...] Can anyone out their make a suggestion or recommend something.</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #ffffff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 5px 0 0 0;">Hi all,<br>I am looking for a new oscilloscope [...] and would like suggestions on a low-priced source for them.</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 24px; margin: 0 10px;">+</div>
+    <div style="flex: 1; display: flex; flex-direction: column; margin: 0 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #fffacd; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Please reply to the seller below.<br>For Sale:<br>Sun SCSI-2 Host Adapter Assembly [...]</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #fffacd; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Please reply to the seller below.<br>210M Formatted SCSI Hard Disk 3.5" [...]</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 24px; margin: 0 10px;">=</div>
+    <div style="flex: 1; display: flex; flex-direction: column; margin-left: 5px;">
+      <div style="flex: 1; padding: 10px; background-color: #e6f3ff; margin-bottom: 5px; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Which would YOU choose, and why?<br><br>Like lots of people, I'd really like to increase my data transfer rate from</p>
+      </div>
+      <div style="flex: 1; padding: 10px; background-color: #e6f3ff; border: 1px solid; border-radius: 5px;">
+        <p style="margin: 0;">Hi all,<br>I am looking for a new oscilloscope [...] and would like suggestions on a low-priced source for them.</p>
+      </div>
+    </div>
+  </div>
+</div>
 </li>
 </ul>
 
@@ -489,7 +664,8 @@ Examples of concepts on language data:
 
 To see if CCE finds concepts which are more compositional than existing approaches, we need a way to evaluate the compositionality of concept representations. Compositionality has been evaluated in [existing work from Andreas](https://openreview.net/pdf?id=HJz05o0qK7) on representation learning, and we adapt these metrics for concept learning. To measure compositionality, we assume that a dataset with labeled concepts is used and we evaluate how well the discovered concepts match the labeled concepts and their compositionality structure.
 
-For a dataset where each sample is labelled with which concepts it contains, we measure how closely a sum of the concept representations for the concepts which a sample contains approximate the representation of the sample. This is similar to the reconstruction metric for techniques such as PCA, but our compositionality score only allows for reconstructing using the concept representations corresponding to the present concepts rather than all available concept representations.
+For a sample labelled with certain concepts, we measure how the corresponding concept representations reconstruct its the sample's embedding.
+This is similar to the reconstruction metric for techniques such as PCA, but our compositionality score only allows reconstruction with the concept representations corresponding to the labelled concepts.
 
 <!-- The compositionality score of discovered concepts on a dataset $$D$$ where each sample embedding $$z$$ has associated concepts $$C$$ is given by the following:
 
@@ -513,51 +689,122 @@ Compositionality scores for all baselines and CCE are shown below for the CUB da
 
 ## CCE Concepts Improve Downstream Classification Accuracy
 
-A primary use-case for concepts is for interpretable classification with [Posthoc Concept-Bottleneck Models (PCBMs)](https://openreview.net/pdf?id=nA5AZ8CEyow). For four datasets spanning image and text domains, we evaluate CCE concepts against baselines in terms of classification accuracy after training a PCBM on the extracted concepts. We show classification accuracy with increasing numbers of extracted concepts in the figure below, and we see that CCE always achieves the highest accuracy or near-highest accuracy.
+<!-- A primary use-case for concepts is for interpretable classification with [Posthoc Concept-Bottleneck Models (PCBMs)](https://openreview.net/pdf?id=nA5AZ8CEyow). For four datasets spanning image and text domains, we evaluate CCE concepts against baselines in terms of classification accuracy after training a PCBM on the extracted concepts. We show classification accuracy with increasing numbers of extracted concepts in the figure below, and we see that CCE always achieves the highest accuracy or near-highest accuracy. -->
 
-<!-- <Figure of downstream accuracy> -->
-<ul class="tab" data-tab="44bf2f41-34a3-4bd7-b605-29d394ac9b0" data-name="tasks_acc">
-      <li class="active">
-          <a href="#">CUB</a>
-      </li>
-  
-      <li class="">
-          <a href="#">HAM</a>
-      </li>
-      <li class="">
-          <a href="#">News</a>
-      </li>
-      <li class="">
-          <a href="#">Truth</a>
-      </li>
-</ul>
-<ul class="tab-content" id="44bf2f41-34a3-4bd7-b605-29d394ac9b0" data-name="tasks_acc">
-  
-<li class="active">
-<!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
+Do the concepts discovered by CCE improve downstream classification accuracy compared to baseline methods? We find that CCE does improve accuracy, as shown below on the CUB dataset when using 100 concepts.
 
-{% include gallery id="cub_acc" layout="" caption="" %}
-</li>
+<canvas id="cubChart" width="800" height="400"></canvas>
+<script>
+    const ctx = document.getElementById('cubChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['CT', 'PCA', 'ACE', 'DictLearn', 'NMF', 'CCE'],
+            datasets: [{
+                label: 'CUB Score',
+                data: [65.60, 72.71, 74.99, 75.33, 75.81, 76.49],
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                errorBars: {
+                    'CT': 0.12,
+                    'PCA': 0.01,
+                    'ACE': 0.06,
+                    'DictLearn': 0.07,
+                    'NMF': 0.11,
+                    'CCE': 0.47
+                }
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Downstream classification accuracy on CUB',
+                    font: {
+                        size: 18
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(2) + ' ± ' + context.dataset.errorBars[context.label];
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Accuracy'
+                    },
+                    min: 60,
+                    max: 80
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Method'
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: 'errorBars',
+            afterDatasetsDraw(chart, args, plugins) {
+                const {ctx, data, chartArea: {top, bottom, left, right}, scales: {x, y}} = chart;
 
-<li class="">
-<!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
+                ctx.save();
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
 
-{% include gallery id="ham_acc" layout="" caption="" %}
-</li>
-<li class="">
-<!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
+                data.datasets[0].data.forEach((datapoint, index) => {
+                    const xPos = x.getPixelForValue(index);
+                    const yPos = y.getPixelForValue(datapoint);
+                    const errorBar = data.datasets[0].errorBars[data.labels[index]];
+                    const yPosUpper = y.getPixelForValue(datapoint + errorBar);
+                    const yPosLower = y.getPixelForValue(datapoint - errorBar);
 
-{% include gallery id="news_acc" layout="" caption="" %}
-</li>
-<li class="">
-<!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, yPosUpper);
+                    ctx.lineTo(xPos, yPosLower);
+                    ctx.stroke();
 
-{% include gallery id="truth_acc" layout="" caption="" %}
-</li>
-</ul>
+                    ctx.beginPath();
+                    ctx.moveTo(xPos - 5, yPosUpper);
+                    ctx.lineTo(xPos + 5, yPosUpper);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(xPos - 5, yPosLower);
+                    ctx.lineTo(xPos + 5, yPosLower);
+                    ctx.stroke();
+                });
+
+                ctx.restore();
+            }
+        }]
+    });
+</script>
+
+In the paper, we show that CCE also improves classification performance on three other datasets spanning vision and language.
 
 ## Conclusion
 
-Compositionality is a desired property of concept representations as human-interpretable concepts are often compositional, but we show that existing concept learning methods do not always learn concept representations which compose through addition. After studying the representation of concepts in a synthetic setting we find two salient properties of compositional concept representations, and we propose a concept learning method, CCE, which leverages our insights to learn compositional concepts. CCE finds more compositional concepts than existing techniques, results in better downstream accuracy when used as the features in a PCBM, and even discovers new compositional concepts as shown through our qualitative examples.
+Compositionality is a desired property of concept representations as human-interpretable concepts are often compositional, but we show that existing concept learning methods do not always learn concept representations which compose through addition. After studying the representation of concepts in a synthetic setting we find two salient properties of compositional concept representations, and we propose a concept learning method, CCE, which leverages our insights to learn compositional concepts. CCE finds more compositional concepts than existing techniques, results in better downstream accuracy, and even discovers new compositional concepts as shown through our qualitative examples.
 
-If interested, please check out the details in our paper [here]()! Our code is available [here](https://github.com/adaminsky/compositional_concepts), and you can easily apply CCE to your own dataset or adapt our code to create new concept learning methods.
+Check out the details in our paper [here](https://arxiv.org/abs/2406.18534)! Our code is available [here](https://github.com/adaminsky/compositional_concepts), and you can easily apply CCE to your own dataset or adapt our code to create new concept learning methods.

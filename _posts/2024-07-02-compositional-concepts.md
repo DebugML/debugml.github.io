@@ -155,7 +155,7 @@ To describe something complicated we often rely on explanations using simpler co
             </div>
         </div>
     </div>
-    <figcaption>PCA-based concepts for the CLIP model do not compose.</figcaption>
+    <figcaption>PCA-based concepts for the CLIP model do not compose. The first column depicts the "white birds" concept by showing the two samples closest to the concept representation. The second column shows the "small birds" concept and the two closest images are small birds in this case. The last column shows the composition of the two preceding concept representations.</figcaption>
 </figure>
 
 
@@ -242,7 +242,7 @@ Composition of the "white bird" and "small bird" concepts is expected to look li
             </div>
         </div>
     </div>
-<figcaption>Our method (CCE) discovers concepts which compose.</figcaption>
+<figcaption>Our method (CCE) discovers concepts which compose. The "white birds" concept on the left indeed is close to images of white birds, the "small birds" concept in the middle is close to images of small birds, and the composition of these concepts is close to images of small and white birds.</figcaption>
 </figure>
 
 We achieve this by first understanding the properties of compositional concepts in the embedding space of deep networks and then proposing a method to discover such concepts.
@@ -711,7 +711,10 @@ Compositionality scores for all baselines and CCE are shown below for the CUB da
 
 Do the concepts discovered by CCE improve downstream classification accuracy compared to baseline methods? We find that CCE does improve accuracy, as shown below on the CUB dataset when using 100 concepts.
 
+<figure>
 <canvas id="cubChart" width="800" height="400"></canvas>
+<figcaption>Classification accuracy of a <a href="https://openreview.net/pdf?id=nA5AZ8CEyow">PCBM</a> using the concepts discovered by various approaches on the CUB dataset using exactly 100 concepts. CCE improves accuracy. In our paper, we include results on three additional datasets accross varying numbers of concepts to show that CCE improves performance in many difference scenarios and domains.</figcaption>
+</figure>
 <script>
     const ctx = document.getElementById('cubChart').getContext('2d');
     

@@ -138,7 +138,7 @@ To describe something complicated we often rely on explanations using simpler co
                 <img src="/assets/images/compositional_concepts/cub_pca_white_2.jpg" alt="PCA color: white image 2">
             </div>
         </div>
-        <div class="operation">+</div>
+        <div class="operation"><br>+</div>
         <div>
             <div class="column-title">size: 3-5in</div>
             <div class="img-container">
@@ -146,7 +146,7 @@ To describe something complicated we often rely on explanations using simpler co
                 <img src="/assets/images/compositional_concepts/cub_pca_small_2.jpg" alt="PCA size: 3-5in image 2">
             </div>
         </div>
-        <div class="operation">=</div>
+        <div class="operation"><br>=</div>
         <div>
             <div class="column-title">?</div>
             <div class="img-container">
@@ -159,10 +159,9 @@ To describe something complicated we often rely on explanations using simpler co
 </figure>
 
 
-<!-- a [brachiosaurus](https://brachiolab.github.io/) is a dinosaur which looks like a mixture of a lizard and a giraffe, and a dog is an animal with four legs, a tail, fur, and a snout. This is the *principle of compositionality* at work! -->
+Concept-based explanations [[Kim et. al.](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf), [Yuksekgonul et. al.](https://openreview.net/pdf?id=nA5AZ8CEyow)] aim to map these human-interpretable concepts such as "small bird" and "white bird" to the features learned by deep networks. For example, in the above figure, we visualize the "white bird" and "small bird" concepts discovered in the hidden representations from [CLIP](https://arxiv.org/abs/2103.00020) using a [PCA](https://arxiv.org/pdf/2310.01405)-based approach on a dataset of bird images. The "white bird" concept is close to birds that are indeed white, while the "small bird" concept indeed captures small birds. However, the composition of these two PCA-based concepts results in a concept depicted in the above figure on the right which is *not* close to small and white birds.
 
-The concepts of "small bird" and "white bird" can be ascribed to the features learned by deep networks. Past work such as [TCAV](https://proceedings.mlr.press/v80/kim18d/kim18d.pdf) from Kim et. al. and [Posthoc Concept Bottleneck Models](https://openreview.net/pdf?id=nA5AZ8CEyow) from Yuksekgonul et. al. explore the mapping of human-interpretable concepts to the features learned by deep networks. In the first two columns of the above figure, we show the "white bird" and "small bird" concepts discovered in the hidden representations from [CLIP](https://arxiv.org/abs/2103.00020) by [PCA](https://arxiv.org/pdf/2310.01405) on a dataset of bird images ([CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/)).
-The individual concepts look reasonable, but their composition is clearly not "small white birds". We expect the composition of the two concepts corresponds to a new concept representing "small white birds" as shown in the following example.
+Composition of the "white bird" and "small bird" concepts is expected to look like the following figure. The "white bird" concept is close to white bird images, the "small bird" concept is close to small bird images, and the composition of the two concepts is indeed close to images of small white birds!
 
 <figure>
     <style>
@@ -190,6 +189,11 @@ The individual concepts look reasonable, but their composition is clearly not "s
             height: auto;
             margin-bottom: 5px;
         }
+        .operation-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
         .operation {
             font-size: 24px;
             font-weight: bold;
@@ -205,21 +209,31 @@ The individual concepts look reasonable, but their composition is clearly not "s
             CCE Concepts
         </div>
         <div>
+            <br>
             <div class="column-title">color: white</div>
             <div class="img-container">
                 <img src="/assets/images/compositional_concepts/cub_ours_white_1.jpg" alt="PCA color: white image 1">
                 <img src="/assets/images/compositional_concepts/cub_ours_white_2.jpg" alt="PCA color: white image 2">
             </div>
         </div>
-        <div class="operation">+</div>
+        <div class="operation-container">
+            <br>
+            <br>
+            <div class="operation">+</div>
+        </div>
         <div>
+            <br>
             <div class="column-title">size: 3-5in</div>
             <div class="img-container">
                 <img src="/assets/images/compositional_concepts/cub_ours_small_1.jpg" alt="PCA size: 3-5in image 1">
                 <img src="/assets/images/compositional_concepts/cub_ours_small_2.jpg" alt="PCA size: 3-5in image 2">
             </div>
         </div>
-        <div class="operation">=</div>
+        <div class="operation-container">
+            <br>
+            <br>
+            <div class="operation">=</div>
+        </div>
         <div>
             <div class="column-title">color: white <br> size: 3-5in</div>
             <div class="img-container">
@@ -235,9 +249,13 @@ We achieve this by first understanding the properties of compositional concepts 
 
 ## Compositional Concept Representations
 
-We define a concept as a set of *symbols*, such as the concept $$\{``\text{tail"}\}$$ which we denote as $$``\text{tail"}$$ for simplicity. A *concept representation* is denoted $$R(c)$$ where $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concept names and $$\mathbb{R}^d$$ is an embedding space with dimension $$d$$.
+To understand concept compositionality, we first need a definition of concepts.
+Abstractly, the concept "small bird" is nothing more than the *symbols* used to type it.
+Therefore, we define a concept as a set of symbols, such as the concept $$\{``\text{small bird"}\}$$ which we denote as $$``\text{small bird"}$$ for simplicity.
 
-Since concepts are defined as sets, they compose through the union operator such that $$``\text{small white bird"} = ``\text{small bird"} \cup ``\text{white bird"}$$. While concepts compose through the union, concept representations compose through vector addition. Therefore, we define *compositional concept representations* to mean concept representations which compose through addition whenever their corresponding concepts compose through the union, or that:
+A *concept representation* maps between the symbolic form of the concept, such as $$\{``\text{small bird"}\}$$, into a vector in a deep network's embedding space. A concept representation is denoted $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concept names and $$\mathbb{R}^d$$ is an embedding space with dimension $$d$$.
+
+To compose concepts, we take the union of their set-based representation. For instance, $$``\text{small bird"} \cup ``\text{white bird"} = ``\text{small white bird"}$$. Concept representations, on the other hand, compose through vector addition. Therefore, we define *compositional concept representations* to mean concept representations which compose through addition whenever their corresponding concepts compose through the union, or that:
 
 **Definition:** For concepts $$c_i, c_j \in \mathbb{C}$$, the concept representation $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ is compositional if for some $$w_{c_i}, w_{c_j}\in \mathbb{R}^+$$,
 $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
@@ -246,11 +264,11 @@ $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
 
 ## Experiments Using Controlled Datasets
 
-Given these definitions, we start from the case where we have data with known concepts names (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
+Given these definitions, we start from the case where we have data with known concept names (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
 
-To understand how concepts are actually represented by pretrained models we resort to a controlled data setting where we can get representations for ground truth concepts. We consider the [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/) dataset used above which consists of images of different bird species annotated with various finegrained attributes. To create a controlled setting, we use the provided finegrained annotations to subset the dataset to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large).
+To understand how concepts are actually represented by pre-trained models we use to a controlled data setting where we can get representations for ground truth concepts. We start with the bird dataset, called [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/), used up to this point consisting of different bird species annotated with finegrained attributes. To create a controlled setting, we subset the data to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large) according to the finegrained annotations.
 
-As each image contains a bird of exactly one size and one color, we have annotations for which color and size each image represents, allowing us to derive ground truth concept representations for the bird shape and size concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+As each image in our controlled dataset contains a bird annotated as exactly one size and one color, we derive ground truth concept representations for the bird shape and size concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
 
 Our main finding from the ground truth concept representations for each bird size and color (6 total concepts) is that CLIP encodes concepts of different attributes (colors vs. sizes) as orthogonal, but that concepts of the same attribute (e.g. different colors) need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below.
 
@@ -263,7 +281,7 @@ Our main finding from the ground truth concept representations for each bird siz
 <div class="chartcontainer" style="width: 400px; height: 400px; margin-bottom: 10px; margin: auto">
     <canvas id="matrix-chart" width="300" height="300"></canvas>
 </div>
-<figcaption>Cosine similarities of all pairs of concepts. Concepts within an attribute (brown, white, and black or small, medium, and large) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are close to zero.</figcaption>
+<figcaption>Cosine similarities of all pairs of concepts in the controlled setting for the bird images dataset. Concepts within an attribute (brown, white, and black or small, medium, and large) have non-zero cosine similarity, while the cosine similarity of concepts from different attributes are close to zero. We find this orthogonality structure is important for the compositionality of concept representations.</figcaption>
 </figure>
 <script>
     const labels = ['brown', 'white', 'black', 'small', 'medium', 'large'];
@@ -362,21 +380,17 @@ We now see why existing concept learning methods find concepts which do not comp
 
 While the ground truth concept representations display this orthogonality structure, must all compositional concept representations mimick this structure? In our paper, we prove the answer is yes in a simplified setting!
 
-<!-- We show a toy example below where we first show how concepts which follow the described orthogonality structure compose correctly, while a set of concepts which do not follow such structure exhibit unexpected compositions. In addition, the individual concept representations still perfectly discriminate between the individual concepts, so looking at each concept independently would mislead us to believe we have learned the correct concepts. -->
-
-<!-- <Toy example> -->
-
 Given these findings, we next outline our method for finding compositional concepts better than existing approaches.
 
 ## Compositional Concept Extraction
 
-{% include gallery id="method" layout="" caption="Depiction of our method. There are two high level components, LearnSubspace and LearnConcepts, which are performed jointly to produce one set of concepts. Then we orthogonally project away those concepts from the embedding space, and repeat the process." %}
+{% include gallery id="method" layout="" caption="Depiction of CCE. There are two high level components, LearnSubspace and LearnConcepts, which are performed jointly to discover a subspace and concepts within the subspace. Then the subspace is orthogonally projected from the model's embedding space, to ensure orthogonality, and we repeat the process." %}
 
-Our findings from the synthetic experiments show that compositional concepts should be represented such that concepts from different attributes are orthogonal to each other while concepts of the same attribute may not be orthogonal. To create this structure, we use an unsupervised iterative orthogonal projection approach.
+Our findings from the synthetic experiments show that compositional concepts are represented such that different attributes are orthogonal while concepts of the same attribute may not be orthogonal. To create this structure, we use an unsupervised iterative orthogonal projection approach.
 
-First, orthogonality between groups of concepts is enforced through orthogonal projection. Once we find one set of concept representations (which may correspond to different values of an attribute such as different colors) we project away the subspace which they span from the model's embedding space, so that all further discovered concepts are orthogonal to the concepts which were within the subspace.
+First, orthogonality between groups of concepts is enforced through orthogonal projection. Once we find one set of concept representations (which may correspond to different values of an attribute such as different colors) we project away the subspace which they span from the model's embedding space so that all further discovered concepts are orthogonal to the concepts within the subspace.
 
-To find the concepts within a subspace, we jointly find a subspace (with *LearnSubspace*) and a set of concepts (with *LearnConcepts*) as shown in the figure above. Given a subspace $$P$$, the the LearnConcepts step finds a set of concepts within $$P$$ which are well clustered. On the other hand, the LearnSubspace step is given a set of concept representations and tries to find an optimal subspace in which the given concepts are maximally clustered. Since these steps are mutually dependent, we jointly learn both the subspace $$P$$ and the concepts within the subspace.
+To find the concepts within a subspace, we jointly learn a subspace (with *LearnSubspace*) and a set of concepts (with *LearnConcepts*). The figure above illustrates the high level algorithm. Given a subspace $$P$$, the LearnConcepts step finds a set of concepts within $$P$$ which are well clustered. On the other hand, the LearnSubspace step is given a set of concept representations and tries to find an optimal subspace in which the given concepts are maximally clustered. Since these steps are mutually dependent, we jointly learn both the subspace $$P$$ and the concepts within the subspace.
 
 The full algorithm operates by finding a subspace and concepts within the subspace, then projecting away the subspace from the model's embedding space and repeating. All subspaces are therefore mutually orthogonal, but the concepts within one subspace may not be orthogonal, as desired.
 
@@ -385,9 +399,10 @@ The full algorithm operates by finding a subspace and concepts within the subspa
 
 ## Discovering New Concepts
 
-Since our method is unsupervised, we apply it to larger-scale datasets where we do not know all the relevant concepts and see what concepts are discovered. Click through the below visualization for some examples of the disovered concepts:
+Since our method is unsupervised, we apply it to larger-scale datasets where the relevant concepts are not all known. Click through the below visualization for some examples of the disovered concepts:
 
 For a dataset of bird images (CUB):
+<figure>
 <div class="image-selector-visualization">
     <style>
         .image-selector-visualization {
@@ -495,7 +510,7 @@ For a dataset of bird images (CUB):
             <div id="image-selector-title2">Select C2</div>
             <select id="image-selector2" class="image-selector-select" onchange="updateImageSelectorImages()">
                 <!-- <option value="">Choose one</option> -->
-                <option value="47">Birds with food in mouth</option>
+                <option value="47">Birds eating food</option>
                 <option value="35">Frames around image</option>
             </select>
             <a href="/assets/images/compositional_concepts/cub_47.png">
@@ -507,7 +522,7 @@ For a dataset of bird images (CUB):
             </a>
         </div>
         <div class="image-selector-column">
-            <div id="image-selector-title3">C1 + C2</div>
+            <div id="image-selector-title3">C1 + C2<br><br><br></div>
             <a id="image-selector-result-a" href="">
             <img id="image-selector-result-image" class="image-selector-image" src="" alt="Resulting Image">
             </a>
@@ -561,12 +576,13 @@ For a dataset of bird images (CUB):
         });
     </script>
 </div>
+<figcaption>Interactive visualization of some discovered compositional concepts on the CUB dataset. The concepts in the first two columns compose to form the concept in the third column.</figcaption>
+</figure>
 
 <!-- <Qualitative examples> -->
 <!-- ![Qual1](/assets/images/compositional_concepts/framed_birds.jpg) 
 ![Qual2](/assets/images/compositional_concepts/birds_hands.jpg) -->
 
-<br>
 Examples of concepts on language data:
 <ul class="tab" data-tab="44bf2f41-34a3-4bd7-b605-29d394ac9b0f" data-name="tasks">
       <li class="active">
@@ -582,6 +598,7 @@ Examples of concepts on language data:
 <li class="active">
 <!-- <p class="notice"><strong>Math Reasoning</strong>: Given a math question, we want to obtain the answer as a real-valued number. Here, we use Python as the symbolic language and the Python Interpreter as the determinstic solver. Below is an example from <a href="https://github.com/openai/grade-school-math">GSM8K</a>, a dataset of grade-school math questions.</p> -->
 
+<figure>
 <div style="display: flex; flex-direction: column; width: 100%; max-width: 800px; margin: 20px auto; padding: 10px; box-sizing: border-box; position: relative; font-size: 14px;">
   <div style="display: flex; margin-bottom: 10px;">
     <div style="flex: 1; text-align: center; font-weight: bold;">Text Ending in "..."</div>
@@ -617,10 +634,13 @@ Examples of concepts on language data:
     </div>
   </div>
 </div>
+<figcaption>Discovered concepts from the <a href="http://qwone.com/~jason/20Newsgroups/">Newsgroups</a> dataset. The "Text ending in ..." concept is close to text which all ends in "...", the "Sports" concept is close to articles about sports, and the compostion of these concepts is close to samples about sports that end in "...".</figcaption>
+</figure>
 </li>
 
 <li class="">
 
+<figure>
 <div style="display: flex; flex-direction: column; width: 100%; max-width: 800px; margin: 20px auto; padding: 10px; box-sizing: border-box; position: relative; font-size: 14px;">
   <div style="display: flex; margin-bottom: 10px;">
     <div style="flex: 1; text-align: center; font-weight: bold;">Asking for suggestions</div>
@@ -656,24 +676,22 @@ Examples of concepts on language data:
     </div>
   </div>
 </div>
+<figcaption>Discovered concepts from the <a href="http://qwone.com/~jason/20Newsgroups/">Newsgroups</a> dataset. The "Asking for suggestions" concept is close to text where someone asks others for suggestions, the "Items for sale" concept is close to ads which are listing items available for purchase, and the compostion of these concepts is close to samples where someone asks for suggestions about purchasing a new item.</figcaption>
+</figure>
+
 </li>
 </ul>
 
 
 ## CCE Concepts are Compositional
 
-To see if CCE finds concepts which are more compositional than existing approaches, we need a way to evaluate the compositionality of concept representations. Compositionality has been evaluated in [existing work from Andreas](https://openreview.net/pdf?id=HJz05o0qK7) on representation learning, and we adapt these metrics for concept learning. To measure compositionality, we assume that a dataset with labeled concepts is used and we evaluate how well the discovered concepts match the labeled concepts and their compositionality structure.
+Compositionality has been evaluated for representation learning methods ([Andreas](https://openreview.net/pdf?id=HJz05o0qK7)), but we adapt the evaluation for concept learning methods.
+To measure compositionality in concept learning, we need a dataset with labeled concepts. For an image of a small white bird with concepts "small bird" and "white bird", we measure how well a sum of the discovered "small bird" and "white bird" concepts can reconstruct the embedding of the image.
 
-For a sample labelled with certain concepts, we measure how the corresponding concept representations reconstruct its the sample's embedding.
-This is similar to the reconstruction metric for techniques such as PCA, but our compositionality score only allows reconstruction with the concept representations corresponding to the labelled concepts.
+Generally, for a sample labelled with certain concepts, the compositionality score measures how the corresponding concept representations reconstruct the sample's embedding.
+This is similar to the reconstruction metric for techniques such as PCA, but it only allows reconstruction with the concept representations of the concepts present in a sample.
 
-<!-- The compositionality score of discovered concepts on a dataset $$D$$ where each sample embedding $$z$$ has associated concepts $$C$$ is given by the following:
-
-$$\min_{\Lambda \ge 0} \frac{1}{|D|}\sum_{(z, C)\in D} \left\|z - \sum_{i=1}^{|C|} \Lambda_{z, i}R(C_i)\right\|$$ -->
-
-For a sample such as an image of a small white bird with concepts “small” and “white”, this score represents how well the embedding of the image can be reconstructed as a sum of the discovered “small” and “white” concept representations.
-
-Compositionality scores for all baselines and CCE are shown below for the CUB dataset as well as two other datasets, where smaller scores are better. We see that for all datasets, CCE has the lowest compositionality score, implying higher compositionality of the discovered concepts.
+Compositionality scores for all baselines and CCE are shown below for the CUB dataset as well as two other datasets, where smaller scores are better. CCE has the lowest compositionality score for all datasets, implying higher compositionality of the discovered concepts.
 
 |           | CLEVR             | CUB-sub           | Truth-sub         |
 |:----------|:------------------|:------------------|:------------------|

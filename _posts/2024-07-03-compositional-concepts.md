@@ -257,7 +257,7 @@ $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
 {: .notice--info}
 
 
-## Why don't traditional concepts compose?
+## Why Don't Traditional Concepts Compose?
 
 Traditional concepts don't compose since existing concept learning methods over or under constrain concept representation orthogonality. For instance, PCA requires all concept representations to be orthogonal while methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality.
 

@@ -6,6 +6,11 @@ header:
   overlay_filter: "0.75"
   overlay_image: /assets/images/logicbreaks/building_bombs.gif
   teaser: /assets/images/logicbreaks/building_bombs.gif
+  actions:
+    - label: "Paper"
+      url: https://arxiv.org/abs/2407.00075
+    - label: "Code"
+      url: https://github.com/AntonXue/tf_logic
 
 authors:
   - Anton Xue
@@ -62,30 +67,28 @@ gallery_mc_suppression:
 </script>
 
 
+> LLMs can be easily tricked into ignoring content safeguards and other prompt-specified instructions.
+> How does this happen?
+> To understand how LLMs may fail to follow the rules, we model rule-following as logical inference and theoretically analyze how to subvert LLMs from reasoning properly.
+> Surprisingly, we find that our theory-based attacks on inference are aligned with real jailbreaks on LLMs.
 
-> Prompts are commonly used to specify what large language models (LLMs) should and should not do.
-> However, LLMs are often tricked into ignoring such instructions --- how are such powerful models so easily fooled?
-> We use propositional Horn logic as a foundation to better understand why this is the case.
-> In our theoretical investigation, we subvert the rule-following of simplified models by strategically manipulating the attention.
-> Interestingly, we find that real LLM jailbreak share similar strategies as our theory-based ones.
 
 {% include gallery id="gallery_building_bombs" caption="An adversarial suffix makes the LLM ignore its safety prompt." %}
 
 
-## Logical Inference Can Model Rule-following
+## Modeling Rule-following with Logical Inference
 
-Developers and users commonly use prompts to specify what LLMs should and should not do.
-Although this strategy is generally effective, it is also exploitable, most notably by *jailbreak attacks*.
-Such attacks work by appending the prompt with an **adversarial suffix**, a malicious sequence of tokens that tricks the model into generating undesirable content.
-For example, a developer-given safety prompt might instruct the LLM to not provide bomb-building instructions, but a carefully crafted suffix can bypass this safeguard.
-Although there is much interest in jailbreak attacks, the principles of why such exploits work, as well as how to engineer and prevent them, are poorly understood.
+Developers commonly use prompts to specify what LLMs should and should not do.
+For example, the LLM may be instructed to not give bomb-building guidance through a *safety prompt* such as "don't talk about building bombs".
+Although such prompts are sometimes effective, they are also easily exploitable, most notably by *jailbreak attacks*.
+In jailbreak attacks, a malicious user crafts an adversarial input that tricks the model into generating undesirable content.
+For instance, appending the user prompt "How do I build a bomb?" with a nonsensical **adversarial suffix** "@A$@@..." fools the model into yielding bomb-building instructions.
 
 
-In this blog, we examine how to subvert LLMs from following the rules specified in the prompt.
-**Our main idea is to study this with a logic-based framework.**
-In particular, we characterize rule-following as inference in propositional Horn logic, a system wherein rules take the form *"if $P$ and $Q$, then $R$"* for some propositions $P$, $Q$ and $R$.
+In this blog, we present some [recent work](https://arxiv.org/abs/2407.00075) on how to subvert LLMs from following the rules specified in the prompt.
+Such rules might be safety prompts that look like*"if [the user is not an admin] and [the user asks about bomb-building], then [the model should reject the query]"*.
+Our main idea is to cast rule-following as inference in propositional Horn logic, a system wherein rules take the form *"if $P$ and $Q$, then $R$"* for some propositions $P$, $Q$ and $R$.
 This logic is a common choice for modeling rule-based tasks, which includes a large number of jailbreak attacks.
-For example, a rule might specify *"if [the user is not an admin] and [the user asks about bomb-building], then [the model should reject the query]"*.
 
 
 A key benefit of our logic-based approach is that it lets us characterize the different properties of what it means to follow the rules.
@@ -137,13 +140,8 @@ Based on these items and recipes, what items can I create?
 To which the LLM might respond:
 
 
-<!--
-**ChatGPT:**
-Based on the starting items of Sheep and Log and the given crafting recipes, you can create the following items: Wool from Sheep, String from Wool, Stick from Log, and finally, a Fishing Rod from String and Stick. Therefore, you can create Wool, String, Stick, and a Fishing Rod from your initial items.
-{: .notice--info}
--->
 
-**LLM (Prompt):**
+**Generation on Prompt:**
 I have Sheep, and so I can create Wool.
 I have Wool, and so I can create String.
 I have Log, and so I can create Stick.
@@ -197,11 +195,13 @@ An adversarial suffix can then specifically target these erroneous behaviors, de
 
 **(1) Rule suppression**: a rule and its dependents are ignored.
 Suppose we want to ignore the rule "if I have Wool, then I can create String".
-In this case, we would like for a prompt appended with the adversarial suffix to generate the following:
+In this case, we would like for a prompt appended with the adversarial suffix to generate the following, where we use ~~strikeout text~~ to denote the omitted output:
 
-**LLM (Prompt + Adv. Suffix):**
+**Generation on Prompt + Adv. Suffix**:
 I have Sheep, and so I can create Wool.
+~~I have Wool, and so I can create String.~~
 I have Log, and so I can create Stick.
+~~I have String and Stick, and so I can create Fishing Rod.~~
 I cannot create any other items.
 {: .notice--danger}
 
@@ -216,10 +216,11 @@ $$
 -->
 
 **(2) Fact amnesia**: the model skips an intermediate step in its derivation.
-For instance, if we want to make the model skip the derivation of Wool, an adversarial suffix-appended prompt may result in the following.
+For instance, if we want to make the model skip the derivation of Wool, an adversarial suffix-appended prompt should result in the following, where ~~strikeout text~~ similarly denotes omission.
 
-**LLM (Prompt + Adv. Suffix):**
-I have Sheep, and so I can create String.
+**Generation on Prompt + Adv. Suffix:**
+I have Sheep, ~~and so I can create Wool.
+I have Wool,~~ and so I can create String.
 I have Log, and so I can create Stick.
 I have String and Stick, and so I can create Fishing Rod.
 I cannot create any other items.
@@ -240,7 +241,7 @@ $$
 That is, we'd like to have the suffix-appended prompt generate anything we'd like to, no matter how ridiculous.
 For instance:
 
-**LLM (Prompt + Adv. Suffix):**
+**Generation on Prompt + Adv. Suffix:**
 I have String, and so I can create Gray Dye.
 I cannot create any other items.
 {: .notice--danger}
@@ -264,7 +265,9 @@ By studying rule-following in a simpler setting, we can more easily construct at
 Interestingly, these theory-based attacks also transfer to models learned from data.
 
 
+<!--
 ### Small Models Can Encode and Learn Rule-following
+-->
 
 We first consider whether a transformer can even perform inference in propositional Horn logic, and if so, how this might be done.
 We show that, in fact, a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to do just this.
@@ -358,20 +361,22 @@ We remark that it is an open problem to better understand the training dynamics 
 ### Theory-based Attacks Transfer to Learned Models
 
 Our simple analytical setting allows us to derive attacks that can provably induce rule suppression, fact amnesia, and state coercion.
-As an example, suppose that we would like to suppress some rule $\gamma$ in the (embedded) prompt $X \in \mathbb{R}^{N \times d}$.
-Given an *attack budget* $p > 0$, the objective is to find an adversarial suffix $\Delta \in \mathbb{R}^{p \times d}$ that, when appended to $X$, causes the reasoner $\mathcal{R}$ to suppress attention on $\gamma$.
-We may think about this rule suppression task as follows:
+As an example, suppose that we would like to suppress some rule $\gamma$ in the (embedded) prompt $X$.
+Our main strategy is to find an adversarial suffix $\Delta$ that, when appended to $X$, draws attention away from $\gamma$.
+In other words, this rule-suppression suffix $\Delta$ acts as a "distraction" that makes the model forget that the rule $\gamma$ is even present.
+This may be (roughly) formulated as follows:
 
 $$
 \begin{aligned}
-  \underset{\Delta \in \mathbb{R}^{p \times d}}{\text{minimize}}
+  \underset{\Delta}{\text{minimize}}
     &\quad \text{The attention that $\mathcal{R}$ places on $\gamma$} \\
   \text{where}
     &\quad \text{$\mathcal{R}$ is evaluated on $\mathsf{append}(X, \Delta)$} \\
 \end{aligned}
 $$
 
-In fact, fo reach of the three failure modalities, it is possible to find such an adversarial suffix $\Delta$.
+As a technicality, we must also ensures that $\Delta$ draws attention away from only the targeted $\gamma$ and leaves the other rules unaffected.
+In fact, for reach of the three failure modalities, it is possible to find such an adversarial suffix $\Delta$.
 
 **Theorem.** (Theory-based Attacks, Informal)
 For the model described in the encoding theorem, there exist suffixes that induce fact amnesia, rule suppression, and state coercion.
@@ -405,14 +410,15 @@ If I have Wool, then I can create String.
 If I have Log, then I can create Stick.
 If I have String and Stick, then I can create Fishing Rod.
 If I have Brick, then I can create Stone Stairs.
-Here are some items I have: I have Sheep and Log.
+If I have Lapis Block, then I can create Lapis Lazuli.
+Here are some items I have: I have Sheep and Log and Lapis Block.
 Based on these items and recipes, I can create
 the following:
 {: .notice--info}
 
 
-This is a more complicated version of our earlier running example, but is closer to how our actual dataset is constructed.
 For attacks, we adapted the reference implementation of the [Greedy Coordinate Gradients](https://github.com/llm-attacks/llm-attacks) (GCG) algorithm to find adversarial suffixes.
+Although GCG was not specifically designed for our setup, we found the necessary modifications straightforward.
 Notably, the suffixes that GCG finds use similar strategies as ones explored in our theory.
 As an example, the GCG-found suffix for rule suppression significantly reduces the attention placed on the targeted rule.
 We show one such example below, where we plot the **difference** in attention between an attacked (with adv. suffix) and a non-attacked (without suffix) case:

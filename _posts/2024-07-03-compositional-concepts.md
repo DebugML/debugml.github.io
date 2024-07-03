@@ -128,9 +128,6 @@ To describe something complicated we often rely on explanations using simpler co
     </style>
     <div class="container">
         <!-- PCA Concepts Section -->
-        <div class="section-title">
-            PCA Concepts
-        </div>
         <div>
             <div class="column-title">color: white</div>
             <div class="img-container">
@@ -205,9 +202,6 @@ Composition of the "white bird" and "small bird" concepts is expected to look li
     </style>
     <div class="container">
         <!-- PCA Concepts Section -->
-        <div class="section-title">
-            CCE Concepts
-        </div>
         <div>
             <br>
             <div class="column-title">color: white</div>
@@ -251,9 +245,10 @@ We achieve this by first understanding the properties of compositional concepts 
 
 To understand concept compositionality, we first need a definition of concepts.
 Abstractly, the concept "small bird" is nothing more than the *symbols* used to type it.
-Therefore, we define a concept as a set of symbols, such as the concept $$\{``\text{small bird"}\}$$ which we denote as $$``\text{small bird"}$$ for simplicity.
+Therefore, we define a concept as a set of symbols.
+<!-- , such as the concept $$\{``\text{small bird"}\}$$ which we denote as $$``\text{small bird"}$$ for simplicity. -->
 
-A *concept representation* maps between the symbolic form of the concept, such as $$\{``\text{small bird"}\}$$, into a vector in a deep network's embedding space. A concept representation is denoted $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concept names and $$\mathbb{R}^d$$ is an embedding space with dimension $$d$$.
+A *concept representation* maps between the symbolic form of the concept, such as $$``\text{small bird"}$$, into a vector in a deep network's embedding space. A concept representation is denoted $$R: \mathbb{C}\rightarrow\mathbb{R}^d$$ where $$\mathbb{C}$$ is the set of all concept names and $$\mathbb{R}^d$$ is an embedding space with dimension $$d$$.
 
 To compose concepts, we take the union of their set-based representation. For instance, $$``\text{small bird"} \cup ``\text{white bird"} = ``\text{small white bird"}$$. Concept representations, on the other hand, compose through vector addition. Therefore, we define *compositional concept representations* to mean concept representations which compose through addition whenever their corresponding concepts compose through the union, or that:
 
@@ -262,15 +257,19 @@ $$R(c_i \cup c_j) = w_{c_i}R(c_i) + w_{c_j}R(c_j)$$.
 {: .notice--info}
 
 
-## Experiments Using Controlled Datasets
+## Why don't traditional concepts compose?
 
-Given these definitions, we start from the case where we have data with known concept names (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
+Traditional concepts don't compose since existing concept learning methods over or under constrain concept representation orthogonality. For instance, PCA requires all concept representations to be orthogonal while methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality.
 
-To understand how concepts are actually represented by pre-trained models we use to a controlled data setting where we can get representations for ground truth concepts. We start with the bird dataset, called [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/), used up to this point consisting of different bird species annotated with finegrained attributes. To create a controlled setting, we subset the data to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large) according to the finegrained annotations.
+We discover the expected orthogonality structure of concept representations using a dataset 
+where each sample is annotated with concept names (we know some $$c_i$$'s) and we study the representation of the concepts (the $$R(c_i)$$'s).
+We create such a setting by subsetting the bird data from [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/) to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large) according to the dataset's finegrained annotations.
 
-As each image in our controlled dataset contains a bird annotated as exactly one size and one color, we derive ground truth concept representations for the bird shape and size concepts. After centering all the representations, we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+<!-- To understand how concepts are actually represented by pre-trained models we use a controlled data setting where we can get representations for ground truth concepts. We start with the bird dataset, called [CUB](https://www.vision.caltech.edu/datasets/cub_200_2011/), used up to this point consisting of different bird species annotated with finegrained attributes. To create a controlled setting, we subset the data to only contain birds of three colors (black, brown, or white) and three sizes (small, medium, or large) according to the finegrained annotations. -->
 
-Our main finding from the ground truth concept representations for each bird size and color (6 total concepts) is that CLIP encodes concepts of different attributes (colors vs. sizes) as orthogonal, but that concepts of the same attribute (e.g. different colors) need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below.
+Each image now contains a bird annotated as exactly one size and one color, so we derive ground truth concept representations for the bird shape and size concepts. To do so, we center all the representations, and we define the ground truth representation for a concept similar to [existing work](https://openaccess.thecvf.com/content/ICCV2023/papers/Trager_Linear_Spaces_of_Meanings_Compositional_Structures_in_Vision-Language_Models_ICCV_2023_paper.pdf) as the mean representation of all samples annotated with the concept.
+
+Our main finding from analyzing the ground truth concept representations for each bird size and color (6 total concepts) is that CLIP encodes concepts of different attributes (colors vs. sizes) as orthogonal, but that concepts of the same attribute (e.g. different colors) need not be orthogonal. We make this empirical observation from the cosine similarities between all pairs of ground truth concepts, shown below.
 
 
 <!-- <Heatmap> -->
@@ -376,11 +375,11 @@ Our main finding from the ground truth concept representations for each bird siz
 **Observation:** The concept pairs of the same attribute have non-zero cosine similarity, while cross-attribute pairs have close to zero cosine similarity, implying orthogonality.
 {: .notice--info}
 
-We now see why existing concept learning methods find concepts which do not compose correctly through addition. Existing methods either impose too strong or too weak of a constraint on the orthogonality of discovered concepts. For instance, PCA requires that all concepts are orthogonal to each other, but concepts like “white” and “black” should not be orthogonal. On the other hand, methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality, which means concepts such as “black” and “small” may not be orthogonal.
+<!-- We now see why existing concept learning methods find concepts which do not compose correctly through addition. Existing methods either impose too strong or too weak of a constraint on the orthogonality of discovered concepts. For instance, PCA requires that all concepts are orthogonal to each other, but concepts like "white" and "black" should not be orthogonal. On the other hand, methods such as [ACE](https://proceedings.neurips.cc/paper_files/paper/2019/file/77d2afcb31f6493e350fca61764efb9a-Paper.pdf) from Ghorbani et. al. place no restrictions on concept orthogonality, which means concepts such as "black" and "small" may not be orthogonal. -->
 
 While the ground truth concept representations display this orthogonality structure, must all compositional concept representations mimick this structure? In our paper, we prove the answer is yes in a simplified setting!
 
-Given these findings, we next outline our method for finding compositional concepts better than existing approaches.
+Given these findings, we next outline our method for finding compositional concepts which follow this orthogonality structure.
 
 ## Compositional Concept Extraction
 
@@ -397,9 +396,9 @@ The full algorithm operates by finding a subspace and concepts within the subspa
 <!-- Running one iteration of CCE results in a subspace $$P$$ and a set of concepts within that subspace. For the next iteration of CCE, we remove the subspace $$P$$ from the embedding space and repeat the algorithm. This removal process guarantees that all concepts discovered in iteration $$i$$ are orthogonal to all concepts discovered in iterations $$j < i$$. This mirrors the orthogonality structure we previously described since concepts within one discovered subspace may not be orthonal, but the concepts in different subspaces will be orthogonal. Therefore, CCE is an unsupervised alorithm for finding concepts divided into orthogonal subspaces. -->
 
 
-## Discovering New Concepts
+## Discovering New Compositional Concepts
 
-Since our method is unsupervised, we apply it to larger-scale datasets where the relevant concepts are not all known. Click through the below visualization for some examples of the disovered concepts:
+We qualitatively show that on larger-scale datasets, CCE discovers compositional concepts. Click through the below visualizations for examples of the disovered concepts on image and language data.
 
 For a dataset of bird images (CUB):
 <figure>
@@ -583,7 +582,7 @@ For a dataset of bird images (CUB):
 <!-- ![Qual1](/assets/images/compositional_concepts/framed_birds.jpg) 
 ![Qual2](/assets/images/compositional_concepts/birds_hands.jpg) -->
 
-Examples of concepts on language data:
+For a dataset of text newsgroup postings:
 <ul class="tab" data-tab="44bf2f41-34a3-4bd7-b605-29d394ac9b0f" data-name="tasks">
       <li class="active">
           <a href="#">Example 1</a>
@@ -683,17 +682,18 @@ Examples of concepts on language data:
 </ul>
 
 
-## CCE Concepts are Compositional
+<!-- ## CCE Concepts are Compositional -->
 
-Compositionality has been evaluated for representation learning methods ([Andreas](https://openreview.net/pdf?id=HJz05o0qK7)), but we adapt the evaluation for concept learning methods.
-To measure compositionality in concept learning, we need a dataset with labeled concepts. For an image of a small white bird with concepts "small bird" and "white bird", we measure how well a sum of the discovered "small bird" and "white bird" concepts can reconstruct the embedding of the image.
+<!-- Compositionality has been evaluated for representation learning methods ([Andreas](https://openreview.net/pdf?id=HJz05o0qK7)), but we adapt the evaluation for concept learning methods. -->
+<!-- To measure compositionality in concept learning, we need a dataset with labeled concepts. For an image of a small white bird with concepts "small bird" and "white bird", we measure how well a sum of the discovered "small bird" and "white bird" concepts can reconstruct the embedding of the image. -->
 
-Generally, for a sample labelled with certain concepts, the compositionality score measures how the corresponding concept representations reconstruct the sample's embedding.
-This is similar to the reconstruction metric for techniques such as PCA, but it only allows reconstruction with the concept representations of the concepts present in a sample.
+<!-- Generally, for a sample labelled with certain concepts, the compositionality score measures how the corresponding concept representations reconstruct the sample's embedding. -->
+<!-- This is similar to the reconstruction metric for techniques such as PCA, but it only allows reconstruction with the concept representations of the concepts present in a sample. -->
 
-Compositionality scores for all baselines and CCE are shown below for the CUB dataset as well as two other datasets, where smaller scores are better. CCE has the lowest compositionality score for all datasets, implying higher compositionality of the discovered concepts.
+CCE also finds concepts which are quantitatively compositional.
+Compositionality scores for all baselines and CCE are shown below for the CUB dataset as well as two other datasets, where smaller scores mean greater compositionality. CCE discovers the most compositional concepts compared to existing methods.
 
-|           | CLEVR             | CUB-sub           | Truth-sub         |
+<!-- |           | CLEVR             | CUB-sub           | Truth-sub         |
 |:----------|:------------------|:------------------|:------------------|
 | *GT*        | *3.162 $$\pm$$ 0.000* | *0.472 $$\pm$$ 0.000* | *3.743 $$\pm$$ 0.000* |
 | [PCA](https://arxiv.org/pdf/2310.01405)       | 3.684 $$\pm$$ 0.000 | 0.481 $$\pm$$ 0.000 | 3.988 $$\pm$$ 0.000 |
@@ -702,7 +702,187 @@ Compositionality scores for all baselines and CCE are shown below for the CUB da
 | [NMF](https://openaccess.thecvf.com/content/CVPR2023/papers/Fel_CRAFT_Concept_Recursive_Activation_FacTorization_for_Explainability_CVPR_2023_paper.pdf)       | 3.761 $$\pm$$ 0.050 | 0.542 $$\pm$$ 0.001 | 3.812 $$\pm$$ 0.063 |
 | [CT](https://openreview.net/pdf?id=kAa9eDS0RdO)        | 4.931 $$\pm$$ 0.001 | 0.546 $$\pm$$ 0.000 | 4.348 $$\pm$$ 0.000 |
 | Random    | 4.927 $$\pm$$ 0.001 | 0.546 $$\pm$$ 0.000 | 4.348 $$\pm$$ 0.000 |
-| CCE       | **3.163 $$\pm$$ 0.000** | **0.459 $$\pm$$ 0.004** | **3.689 $$\pm$$ 0.002** |
+| CCE       | **3.163 $$\pm$$ 0.000** | **0.459 $$\pm$$ 0.004** | **3.689 $$\pm$$ 0.002** | -->
+
+<style>
+    .tabitem {
+        display: none;
+    }
+    .tabitem.active {
+        display: block;
+    }
+    .tab-buttons {
+        margin-bottom: 20px;
+    }
+    .tab-buttons button {
+        padding: 10px 20px;
+        margin-right: 10px;
+    }
+</style>
+<ul class="tab">
+    <li id="tab-clevr" class="active" onclick="showTab('clevr')"><a href="#">CLEVR</a></li>
+    <li id="tab-cub-sub" class="" onclick="showTab('cub-sub')"><a href="#">CUB-sub</a></li>
+    <li id="tab-truth-sub" class="" onclick="showTab('truth-sub')"><a href="#">Truth-sub</a></li>
+</ul>
+<div id="clevr" class="tabitem active">
+    <canvas id="clevrChart"></canvas>
+</div>
+<div id="cub-sub" class="tabitem">
+    <canvas id="cubSubChart"></canvas>
+</div>
+<div id="truth-sub" class="tabitem">
+    <canvas id="truthSubChart"></canvas>
+</div>
+
+<script>
+    function showTab(tabId) {
+        var tabs = document.querySelectorAll('.tabitem');
+        tabs.forEach(function(tab) {
+            tab.classList.remove('active');
+        });
+        document.getElementById('tab-clevr').classList.remove('active');
+        document.getElementById('tab-cub-sub').classList.remove('active');
+        document.getElementById('tab-truth-sub').classList.remove('active');
+
+        document.getElementById(tabId).classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    var clevrCtx = document.getElementById('clevrChart').getContext('2d');
+    var clevrChart = new Chart(clevrCtx, {
+        type: 'bar',
+        data: {
+            labels: ['GT', 'PCA', 'ACE', 'DictLearn', 'NMF', 'CT', 'Random', 'CCE'],
+            datasets: [{
+                label: 'CLEVR',
+                data: [3.162, 3.684, 3.496, 3.387, 3.761, 4.931, 4.927, 3.163],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+
+    var cubSubCtx = document.getElementById('cubSubChart').getContext('2d');
+    var cubSubChart = new Chart(cubSubCtx, {
+        type: 'bar',
+        data: {
+            labels: ['GT', 'PCA', 'ACE', 'DictLearn', 'NMF', 'CT', 'Random', 'CCE'],
+            datasets: [{
+                label: 'CUB-sub',
+                data: [0.472, 0.481, 0.502, 0.503, 0.542, 0.546, 0.546, 0.459],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+          plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+
+    var truthSubCtx = document.getElementById('truthSubChart').getContext('2d');
+    var truthSubChart = new Chart(truthSubCtx, {
+        type: 'bar',
+        data: {
+            labels: ['GT', 'PCA', 'ACE', 'DictLearn', 'NMF', 'CT', 'Random', 'CCE'],
+            datasets: [{
+                label: 'Truth-sub',
+                data: [3.743, 3.988, 3.727, 3.708, 3.812, 4.348, 4.348, 3.689],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+          plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+</script>
 
 
 ## CCE Concepts Improve Downstream Classification Accuracy

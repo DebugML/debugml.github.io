@@ -127,6 +127,35 @@ Rajeev Alur:
       icon: "fas fa-fw fa-link"
       url: "https://www.cis.upenn.edu/~alur/"
 
+Surbhi Goel:
+  name    : "Surbhi Goel"
+  avatar  : "/assets/images/avatar/surbhi.jpg"
+  bio     : "Assistant Professor at UPenn"
+  home    : https://www.surbhigoel.com/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:surbhig@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://www.surbhigoel.com/"
+
+Avishree Khare:
+  name    : "Avishree Khare"
+  avatar  : "/assets/images/avatar/avishree.jpg"
+  bio     : "CS PhD Student at UPenn"
+  home    : https://avishreekh.github.io/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:akhare@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://avishreekh.github.io/"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/avishreekh"
+
 Aaditya Naik:
   name: "Aaditya Naik"
   avatar: "/assets/images/avatar/aaditya.jpeg"
@@ -219,6 +248,12 @@ Adam Stein:
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://seas.upenn.edu/~steinad"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/adamlsteinl"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/adaminsky"
 
 Li Zhang:
   name             : "Li Zhang"

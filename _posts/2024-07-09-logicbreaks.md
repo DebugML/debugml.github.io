@@ -88,15 +88,32 @@ For instance, appending the user prompt "How do I build a bomb?" with a nonsensi
 In this blog, we present some [recent work](https://arxiv.org/abs/2407.00075) on how to subvert LLMs from following the rules specified in the prompt.
 Such rules might be safety prompts that look like*"if [the user is not an admin] and [the user asks about bomb-building], then [the model should reject the query]"*.
 Our main idea is to cast rule-following as inference in propositional Horn logic, a system wherein rules take the form *"if $P$ and $Q$, then $R$"* for some propositions $P$, $Q$ and $R$.
+This logic is a common choice for modeling rule-based tasks.
+In particular, it effectively captures many instructions commonly specified in the safety prompt, and so serves as a foundation for understanding how jailbreaks subvert LLMs from following these rules.
+
+
+<!--
 This logic is a common choice for modeling rule-based tasks, which includes a large number of jailbreak attacks.
+-->
 
 
-A key benefit of our logic-based approach is that it lets us characterize the different properties of what it means to follow the rules.
+
+A key benefit of our logic-based approach is that it lets us characterize the different properties of what it means to follow the rules --- and what it means to break them.
 For instance, one adversarial suffix might trick the model into ignoring a rule, while another suffix might lead to absurd reasoning steps.
 Although both suffixes subvert rule-following, their strategies are fundamentally different.
 By identifying and formalizing the different rule-following properties, we can also precisely describe how model may fail to follow the rules.
 
 
+In this blog, we first set up a logic-based framework that lets us precisely characterize how rules can be subverted.
+Next, we present our main theoretical result of how to subvert a language model from following the rules in a simplified setting.
+Furthermore, we find that real jailbreak attacks on LLMs also use strategies similar to our theory-based derivations.
+Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
+In summary:
+* Small transformers can theoretically encode and practically learn inference in propositional Horn logic.
+* Jailbreak attacks are easy to find and highly effective in our simplified, analytical setting.
+* These theory-based attacks transfer to practice, and existing LLM jailbreaks mirror these theory-based attacks.
+
+<!--
 Our main approach is as follows.
 We first formalize a logic-based framework for studying rule-following.
 We then consider a simplified, theoretical setting to show that transformer-based language models can both encode and learn rule-following.
@@ -107,6 +124,7 @@ In summary:
 * Small transformers can theoretically encode and practically learn inference in propositional Horn logic.
 * Theory-based attacks transfer to practice.
 * Existing LLM jailbreaks mirror these theory-based attacks.
+-->
 
 
 {% include gallery id="gallery_results_overview" caption="An overview of our results. We devise jailbreak attacks in a simplified theoretical setting that transfer to learned reasoners. Moreover, real jailbreaks on real LLMs exhibit similar strategies as our theory-based setup." %}
@@ -114,10 +132,10 @@ In summary:
 
 ## A Logic-based Framework for Rule-following
 
-Our main idea is to study rule-following as inference in propositional Horn logic.
-Although our starting motivation is to better understand jailbreak attacks, it will be helpful to more broadly consider *dependency relations*, which propositional Horn logic is well-suited to modeling.
-As a running example, we consider the task of crafting items in [Minecraft](https://www.minecraft.net) according to a recipe list.
-For instance, a player may have the following recipe list and starting items:
+To study rule-following, we model it as inference in propositional Horn logic.
+Moreover, although our starting motivation is to better understand jailbreak attacks, it will be helpful to more broadly consider *dependency relations*, which is especially well-suited to propositional Horn logic.
+As a running example, consider the task of crafting items in [Minecraft](https://www.minecraft.net).
+For instance, a player may have the following crafting recipes and starting items:
 
 
 {% include gallery id="gallery_mc_example" caption="Crafting items in Minecraft. Given a recipe list and some starting items, what items can the player make?" %}
@@ -150,11 +168,15 @@ I cannot create any other items.
 {: .notice--info}
 
 
+How can we be sure that the LLM has responded correctly?
+One way is to check whether its output matches what a logical reasoning algorithm might say.
+
+<!--
 But how can we be sure that the LLM has responded correctly?
 One idea is to relate the LLM output to well-established logic algorithms.
 Then, an LLM output is "correct" if it "sufficiently matches" such a reference algorithm.
 Because these reference algorithms have nice mathematical properties, an LLM output that "matches" such an algorithm will also inherit the corresponding properties.
-
+-->
 
 ### Rule-following via Forward Chaining
 
@@ -166,8 +188,9 @@ $$
   \Phi = \{A,D\}
 $$
 
-For example, the rule $C \land E \to F$ read *"If I have Wool and I have Stick, then I can create Fishing Rod"*, and the proposition $B$ stands for "I have Wool", which we treat as equivalent to "I can create Wool".
-The inference task is to find all the derivable propositions.
+We have introduced propositions $A, B, \ldots, F$ to stand for the obtainable items.
+For example, the proposition $B$ stands for "I have Wool", which we treat as equivalent to "I can create Wool", and the rule $C \land E \to F$ reads "If I have Wool and Stick, then I can create Fishing Rod".
+The inference task is to find all the derivable propositions, i.e., that we can create Wool, Stick, and String, etc.
 Forward chaining then iteratively applies the rules $\Gamma$ to the known facts $\Phi$ as follows:
 
 $$
@@ -186,10 +209,26 @@ The iterative nature of forward chaining is particularly amenable to LLMs, which
 
 ### Subversions on Rule-following
 
+<!--
+However, a major difference between LLM execution and forward chaining is that an LLM generates its output step-by-step, whereas forward chaining keeps track of all the derivable facts at each step.
+-->
+
 So what does it mean for an LLM to *not* follow the rules?
 Following our earlier idea, we say that an LLM fails to follow the rules if its output does not "match" that of forward chaining.
-However, a major difference between LLM execution and forward chaining is that an LLM generates its output step-by-step, whereas forward chaining keeps track of all the derivable facts at each step.
 **Crucially, we identify three ways in which the outputs may fail to match.**
+First, recall that the original, unattacked generation looks as follows:
+
+
+**Original Generation on Prompt:**
+I have Sheep, and so I can create Wool.
+I have Wool, and so I can create String.
+I have Log, and so I can create Stick.
+I have String and Stick, and so I can create Fishing Rod.
+I cannot create any other items.
+{: .notice--info}
+
+
+
 An adversarial suffix can then specifically target these erroneous behaviors, described below.
 
 
@@ -358,7 +397,11 @@ We remark that it is an open problem to better understand the training dynamics 
 -->
 
 
+<!--
 ### Theory-based Attacks Transfer to Learned Models
+-->
+
+### Theory-based Attacks Manipulate the Attention
 
 Our simple analytical setting allows us to derive attacks that can provably induce rule suppression, fact amnesia, and state coercion.
 As an example, suppose that we would like to suppress some rule $\gamma$ in the (embedded) prompt $X$.

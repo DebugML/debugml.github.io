@@ -48,6 +48,7 @@ gallery_theory_attacks:
 
 gallery_mc_suppression:
   - image_path: /assets/images/logicbreaks/mc_suppression_example_2_4.png
+    image_path: /assets/images/logicbreaks/mc_suppression_example_38_4.png
     title: Rule suppression on the Minecraft dataset.
 
 
@@ -249,15 +250,6 @@ I cannot create any other items.
 {: .notice--danger}
 
 
-<!--
-$$
-  \{A,D\}
-  \xrightarrow{\mathcal{R}} \{A,B,D\}
-  \xrightarrow{\mathcal{R}} \{A,B,C,D\}
-  \xrightarrow{\mathcal{R}} \{A,B,C,D\}
-$$
--->
-
 **(2) Fact amnesia**: the model skips an intermediate step in its derivation.
 For instance, if we want to make the model skip the derivation of Wool, an adversarial suffix-appended prompt should result in the following, where ~~strikeout text~~ similarly denotes omission.
 
@@ -270,15 +262,6 @@ I cannot create any other items.
 {: .notice--danger}
 
 
-<!--
-$$
-  \{A,D\}
-  \xrightarrow{\mathcal{R}} \{\}
-  \xrightarrow{\mathcal{R}} \{B,C,D,E\}
-  \xrightarrow{\mathcal{R}} \cdots
-$$
--->
-
 
 **(3) State coercion**: the model infers something absurd.
 That is, we'd like to have the suffix-appended prompt generate anything we'd like to, no matter how ridiculous.
@@ -290,27 +273,12 @@ I cannot create any other items.
 {: .notice--danger}
 
 
-<!--
-$$
-  \{A,D\}
-  \xrightarrow{\mathcal{R}} \{F\}
-  \xrightarrow{\mathcal{R}} \{B,C,E\}
-  \xrightarrow{\mathcal{R}} \cdots
-$$
-
-In this post, we focus on **rule suppression**, which is most closely related to jailbreak attacks.
--->
-
 ## Subverting Inference in Transformers (Theory)
 
 To better understand how adversarial suffixes affect LLMs, we first study how such models might reason in a simplified theoretical setting.
 By studying rule-following in a simpler setting, we can more easily construct attacks that induce each of the three failure modes.
 Interestingly, these theory-based attacks also transfer to models learned from data.
 
-
-<!--
-### Small Models Can Encode and Learn Rule-following
--->
 
 Our main findings are as follows.
 First, we show that a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to encode one step of inference in propositional Horn logic.
@@ -417,11 +385,81 @@ For attacks, we adapted the reference implementation of the [Greedy Coordinate G
 Although GCG was not specifically designed for our setup, we found the necessary modifications straightforward.
 Notably, the suffixes that GCG finds use similar strategies as ones explored in our theory.
 As an example, the GCG-found suffix for rule suppression significantly reduces the attention placed on the targeted rule.
-We show one such example below, where we plot the **difference** in attention between an attacked (with adv. suffix) and a non-attacked (without suffix) case:
+We show some examples below, where we plot the **difference** in attention between an attacked (with adv. suffix) and a non-attacked (without suffix) case.
+Click the arrow keys to navigate!
 
+<!--
 {% include gallery id="gallery_mc_suppression" caption="The difference in attention weights between a generation with and without the adversarial suffix. When the suffix is present, the tokens of the targeted rule receive lower attention than when the suffix is absent." %}
+-->
 
-Although the above is only one example, we found a general trend in that GCG-found suffixes for rule suppression do, on average, significantly diminish attention on the targeted rule.
+
+<div class="carousel-container">
+  <div class="carousel">
+    <div class="carousel-item active">
+      <img src="/assets/images/logicbreaks/mc_suppression_example_2_4.png" alt="First slide">
+    </div>
+    <div class="carousel-item">
+      <img src="/assets/images/logicbreaks/mc_suppression_example_38_4.png" alt="Second slide">
+    </div>
+    <div class="carousel-item">
+      <img src="/assets/images/logicbreaks/mc_suppression_example_53_4.png" alt="Second slide">
+    </div>
+  </div>
+  <a class="carousel-control prev" onclick="moveSlide(-1)">&#10094;</a>
+  <a class="carousel-control next" onclick="moveSlide(1)">&#10095;</a>
+</div>
+
+<style>
+.carousel-container {
+  position: relative;
+  max-width: 100%;
+  margin: auto;
+  overflow: hidden;
+}
+
+.carousel {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+.carousel-control {
+  position: absolute;
+  top: 10%;
+  transform: translateY(-50%);
+  font-size: 1em;
+  color: gray;
+  text-decoration: none;
+  padding: 0 0px;
+  cursor: pointer;
+}
+
+.carousel-control.prev {
+  left: 0px;
+}
+
+.carousel-control.next {
+  right: 0px;
+}
+</style>
+
+<script>
+let currentSlide = 0;
+
+function moveSlide(step) {
+  const carousel = document.querySelector('.carousel');
+  const items = document.querySelectorAll('.carousel-item');
+  currentSlide = (currentSlide + step + items.length) % items.length;
+  carousel.style.transform = 'translateX(' + (-currentSlide * 100) + '%)';
+}
+</script>
+
+
+Although the above are only a few examples, we found a general trend in that GCG-found suffixes for rule suppression do, on average, significantly diminish attention on the targeted rule.
 Similarities for real jailbreaks and theory-based setups also exist for our two other failure modes: for both fact amnesia and state coercion, GCG-found suffixes frequently contain theory-predicted tokens.
 We report additional experiments and discussion in our paper, where our findings suggest a connection between real jailbreaks and our theory-based attacks.
 

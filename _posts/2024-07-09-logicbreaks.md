@@ -86,32 +86,36 @@ For instance, appending the user prompt "How do I build a bomb?" with a nonsensi
 
 
 In this blog, we present some [recent work](https://arxiv.org/abs/2407.00075) on how to subvert LLMs from following the rules specified in the prompt.
-Such rules might be safety prompts that look like*"if [the user is not an admin] and [the user asks about bomb-building], then [the model should reject the query]"*.
+Such rules might be safety prompts that look like *"if [the user is not an admin] and [the user asks about bomb-building], then [the model should reject the query]"*.
 Our main idea is to cast rule-following as inference in propositional Horn logic, a system wherein rules take the form *"if $P$ and $Q$, then $R$"* for some propositions $P$, $Q$ and $R$.
 This logic is a common choice for modeling rule-based tasks.
 In particular, it effectively captures many instructions commonly specified in the safety prompt, and so serves as a foundation for understanding how jailbreaks subvert LLMs from following these rules.
 
 
+We first set up a logic-based framework that lets us precisely characterize how rules can be subverted.
+For instance, one attack might trick the model into ignoring a rule, while another might lead the model to absurd outputs.
+Next, we present our main theoretical result of how to subvert a language model from following the rules in a simplified setting.
+Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
+In summary:
+* Small transformers can theoretically encode and empirically learn inference in propositional Horn logic.
+* Jailbreak attacks are easy to find and highly effective in our simplified, analytical setting.
+* These theory-based attacks transfer to practice, and existing LLM jailbreaks mirror these theory-based attacks.
+
 <!--
-This logic is a common choice for modeling rule-based tasks, which includes a large number of jailbreak attacks.
--->
-
-
-
 A key benefit of our logic-based approach is that it lets us characterize the different properties of what it means to follow the rules --- and what it means to break them.
-For instance, one adversarial suffix might trick the model into ignoring a rule, while another suffix might lead to absurd reasoning steps.
+For instance, one adversarial suffix might trick the model into ignoring a rule, while another suffix might lead the model to absurd outputs.
 Although both suffixes subvert rule-following, their strategies are fundamentally different.
-By identifying and formalizing the different rule-following properties, we can also precisely describe how model may fail to follow the rules.
+By identifying and formalizing the different rule-following properties, we can also precisely describe how the model may fail to follow the rules.
 
-
-In this blog, we first set up a logic-based framework that lets us precisely characterize how rules can be subverted.
+We first set up a logic-based framework that lets us precisely characterize how rules can be subverted.
 Next, we present our main theoretical result of how to subvert a language model from following the rules in a simplified setting.
 Furthermore, we find that real jailbreak attacks on LLMs also use strategies similar to our theory-based derivations.
 Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
 In summary:
-* Small transformers can theoretically encode and practically learn inference in propositional Horn logic.
+* Small transformers can theoretically encode and empirically learn inference in propositional Horn logic.
 * Jailbreak attacks are easy to find and highly effective in our simplified, analytical setting.
 * These theory-based attacks transfer to practice, and existing LLM jailbreaks mirror these theory-based attacks.
+-->
 
 <!--
 Our main approach is as follows.
@@ -308,66 +312,23 @@ Interestingly, these theory-based attacks also transfer to models learned from d
 ### Small Models Can Encode and Learn Rule-following
 -->
 
-We first consider whether a transformer can even perform inference in propositional Horn logic, and if so, how this might be done.
-We show that, in fact, a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to do just this.
-The main idea is as follows:
+Our main findings are as follows.
+First, we show that a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to encode one step of inference in propositional Horn logic.
+Moreover, we find that our simple theoretical construction is susceptible to attacks that target all three failure modes of inference.
+
+
+<details>
+<summary>Click here for details</summary>
+<div markdown="1">
+
+Our main encoding idea is as follows:
 * Propositional Horn logic is Boolean-valued, so inference can be implemented via a Boolean circuit.
 * A one-layer transformer has the theoretical capacity to approximate this circuit; more layers means more power.
 * Therefore, a (transformer-based) language model can also perform propositional inference assuming that its weights behave like the "correct" Boolean circuit.
-
 We illustrate this in the following.
 
 {% include gallery id="gallery_main_idea" caption="The main theoretical encoding idea. A propositional Horn query may be equivalently formulated as Boolean vectors, which may then be solved via Boolean circuits. A language model has the theoretical capacity to encode/approximate such an idealized circuit." %}
 
-
-<!--
-Particularly, for a reasoning problem with at most $n$ propositions, we use an embedding dimension of $d = 2n$.
-Following our running Minecraft example with $n = 6$ proposition, we embed the rule $C \land E \to F$ as follows:
-
-$$
-  (C \land E \to F) \; \cong \; (001010,000001)  \in \{0,1\}^{12}
-$$
-
-Intuitively, the first $n = 6$ bits encode the antecedent of the rule, while the remaining $n$ bits encode the consequent.
-Similarly, we also embed the proof states in $\\{0,1\\}^{12}$ as follows:
-
-$$
-\begin{aligned}
-  \{A,D\} &\;\cong\; (000000,100100) \in \{0,1\}^{12} \\
-  % \{A,B,D,E\} &\;\cong\; (000000,110110) \\
-  % \{A,B,C,D,E\} &\;\cong\; (000000,111110) \\
-  % \{A,B,C,D,E,F\} &\;\cong\; (000000,111111)
-\end{aligned}
-$$
-
-In particular, our encoding is formatted as follows:
-
-$$
-  X_0 = 
-  \mathsf{Encode}(\Gamma, \Phi)
-  = \begin{bmatrix}
-    100000 & 010000 \\
-    010000 & 001000 \\
-    000100 & 000010 \\
-    001010 & 000001 \\
-    000000 & 100100
-  \end{bmatrix}
-  \in \{0,1\}^{5 \times 12}
-$$
-
-where a reasoner model $\mathcal{R}$ starts from $X_0$ and autoregressively predicts the $n$ bits of the next state to generate $X_1 \in \\{0,1\\}^{6 \times d}$, $X_2 \in \\{0,1\\}^{7 \times d}$, and $X_3 \in \\{0,1\\}^{8 \times d}$ such that:
-
-$$
-\begin{aligned}
-  \mathsf{Decode}(X_0) &= \{A,D\} \\
-  \mathsf{Decode}(X_1) &= \{A,B,D,E\} \\
-  \mathsf{Decode}(X_2) &= \{A,B,C,D,E\} \\
-  \mathsf{Decode}(X_3) &= \{A,B,C,D,E,F\}
-\end{aligned}
-$$
-
-In particular, a small reasoner model suffices to encode each step of this autoregressive inference procedure.
--->
 
 More concretely, our encoding result is as follows.
 
@@ -392,14 +353,6 @@ In particular, we observe that models of size $d \geq 2n$ can consistently learn
 These experiments provide evidence that our theoretical setup of $d = 2n$ is not a completely unrealistic setup on which to study rule-following.
 It is an open problem to better understand the training dynamics and to verify whether these models provably succeed in achieving the "correct" weights.
 
-<!--
-We remark that it is an open problem to better understand the training dynamics and verify whether these learned models succeed in achieving a *correct* solution.
--->
-
-
-<!--
-### Theory-based Attacks Transfer to Learned Models
--->
 
 ### Theory-based Attacks Manipulate the Attention
 
@@ -428,8 +381,6 @@ For the model described in the encoding theorem, there exist suffixes that induc
 
 
 
-
-
 We have so far designed these attacks against a *theoretical construction* in which we manually assigned values to every network parameter.
 But how do such attacks transfer to *learned models*, i.e., models with the same size as specified in the theory, but trained from data?
 Interestingly, the learned reasoners are also susceptible to theory-based rule suppression and fact amnesia attacks.
@@ -437,6 +388,8 @@ Interestingly, the learned reasoners are also susceptible to theory-based rule s
 
 {% include gallery id="gallery_theory_attacks" caption="With some modifications, the theory-based rule suppression and fact amnesia attacks achieve a high attack success rate. The state coercion does not succeed even with our modifications, but attains a 'converging' behavior as evidenced by the diminishing variance. The 'Number of Repeats' is a measure of how 'strong' the attack is. Interestingly making the attack 'stronger' has diminishing returns against learned models." %}
 
+</div>
+</details>
 
 
 ## Real Jailbreaks Mirror Theory-based Ones

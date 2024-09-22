@@ -488,3 +488,65 @@ Neelay Velingker:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/nvelingker"
+
+Helen Jin:
+  name    : "Helen Jin"
+  avatar  : "/assets/images/avatar/helen.jpg"
+  bio     : "PhD Student at UPenn"
+  home    : https://helenjin.github.io/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:helenjin@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://helenjin.github.io/"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/helenjin"
+
+Chaehyeon Kim:
+  name    : "Chaehyeon Kim"
+  avatar  : "/assets/images/avatar/chaehyeon.jpg"
+  bio     : "PhD Student at UPenn"
+  home    : https://chaehyeon.kim/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:chaenyk@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://chaehyeon.kim/"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/chaehyeon-kim"
+
+
+Daniel A. Hashimoto:
+  name    : "Daniel A. Hashimoto"
+  avatar  : "/assets/images/avatar/danielhashimoto.jpeg"
+  bio     : "Assistant Professor of Surgery at the Hospital of the University of Pennsylvania"
+  home    : https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:daniel.hashimoto@pennmedicine.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926"
+
+
+Amin Madani:
+  name    : "Amin Madani"
+  avatar  : "/assets/images/avatar/amin.jpeg"
+  bio     : "Assistant Professor of Surgery at the Hospital of the University of Pennsylvania"
+  home    : https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:daniel.hashimoto@pennmedicine.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926"
+
+

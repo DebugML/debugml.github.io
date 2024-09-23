@@ -501,6 +501,9 @@ Helen Jin:
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://helenjin.github.io/"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/helenj1n"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/helenjin"
@@ -544,10 +547,10 @@ Amin Madani:
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      url: "mailto:daniel.hashimoto@pennmedicine.upenn.edu"
+      url: "mailto:amin.madani@uhn.ca"
     - label: "Website"
       icon: "fas fa-fw fa-link"
-      url: "https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926"
+      url: "https://surgery.utoronto.ca/faculty/amin-madani"
 
 
 Masao Sako:

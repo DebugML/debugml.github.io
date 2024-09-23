@@ -524,7 +524,7 @@ Chaehyeon Kim:
 
 Daniel A. Hashimoto:
   name    : "Daniel A. Hashimoto"
-  avatar  : "/assets/images/avatar/danielhashimoto.jpeg"
+  avatar  : "/assets/images/avatar/daniel.jpeg"
   bio     : "Assistant Professor of Surgery at the Hospital of the University of Pennsylvania"
   home    : https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926
   links:
@@ -550,3 +550,29 @@ Amin Madani:
       url: "https://www.med.upenn.edu/apps/faculty/index.php/g275/p8205926"
 
 
+Masao Sako:
+  name    : "Masao Sako"
+  avatar  : "/assets/images/avatar/sako.jpg"
+  bio     : "Arifa Hasan Ahmad and Nada Al Shoaibi Presidential Professor of Physics and Astronomy at the University of Pennsylvania"
+  home    : https://live-sas-physics.pantheon.sas.upenn.edu/people/standing-faculty/masao-sako
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:masao@sas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://live-sas-physics.pantheon.sas.upenn.edu/people/standing-faculty/masao-sako"
+
+
+Lyle Ungar:
+  name    : "Lyle UngarSako"
+  avatar  : "/assets/images/avatar/lyle.jpg"
+  bio     : "Professor of Computer and Information Science at the University of Pennsylvania"
+  home    : https://www.cis.upenn.edu/~ungar/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:ungar@cis.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://www.cis.upenn.edu/~ungar/"

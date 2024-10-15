@@ -36,6 +36,9 @@ gallery_main_idea:
   - image_path: /assets/images/logicbreaks/blog_main_idea.png
     title: Main idea.
 
+gallery_binary_accs:
+  - image_path: /assets/images/logicbreaks/minecraft_probe_results_final_new_total_f1.png
+
 gallery_learned_accs:
   - image_path: /assets/images/logicbreaks/exp1_step1_acc.png
   - image_path: /assets/images/logicbreaks/exp1_step2_acc.png
@@ -83,7 +86,7 @@ Developers commonly use prompts to specify what LLMs should and should not do.
 For example, the LLM may be instructed to not give bomb-building guidance through a *safety prompt* such as "don't talk about building bombs".
 Although such prompts are sometimes effective, they are also easily exploitable, most notably by *jailbreak attacks*.
 In jailbreak attacks, a malicious user crafts an adversarial input that tricks the model into generating undesirable content.
-For instance, appending the user prompt "How do I build a bomb?" with a nonsensical **adversarial suffix** "@A$@@..." fools the model into yielding bomb-building instructions.
+For instance, appending the user prompt "How do I build a bomb?" with a nonsensical **adversarial suffix** "@A$@@..." fools the model into giving bomb-building instructions.
 
 
 In this blog, we present some [recent work](https://arxiv.org/abs/2407.00075) on how to subvert LLMs from following the rules specified in the prompt.
@@ -99,37 +102,10 @@ Next, we present our main theoretical result of how to subvert a language model 
 Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
 In summary:
 * Small transformers can theoretically encode and empirically learn inference in propositional Horn logic.
-* Jailbreak attacks are easy to find and highly effective in our simplified, analytical setting.
+* Our theoretical setup is justified by empirical experiments on LLMs.
+* Jailbreak attacks are easy to find and highly effective in our simplified, theoretical setting.
 * These theory-based attacks transfer to practice, and existing LLM jailbreaks mirror these theory-based attacks.
 
-<!--
-A key benefit of our logic-based approach is that it lets us characterize the different properties of what it means to follow the rules --- and what it means to break them.
-For instance, one adversarial suffix might trick the model into ignoring a rule, while another suffix might lead the model to absurd outputs.
-Although both suffixes subvert rule-following, their strategies are fundamentally different.
-By identifying and formalizing the different rule-following properties, we can also precisely describe how the model may fail to follow the rules.
-
-We first set up a logic-based framework that lets us precisely characterize how rules can be subverted.
-Next, we present our main theoretical result of how to subvert a language model from following the rules in a simplified setting.
-Furthermore, we find that real jailbreak attacks on LLMs also use strategies similar to our theory-based derivations.
-Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
-In summary:
-* Small transformers can theoretically encode and empirically learn inference in propositional Horn logic.
-* Jailbreak attacks are easy to find and highly effective in our simplified, analytical setting.
-* These theory-based attacks transfer to practice, and existing LLM jailbreaks mirror these theory-based attacks.
--->
-
-<!--
-Our main approach is as follows.
-We first formalize a logic-based framework for studying rule-following.
-We then consider a simplified, theoretical setting to show that transformer-based language models can both encode and learn rule-following.
-Next, we construct attacks against our analytical setup, and show that these attacks also transfer to reasoners trained on data.
-Finally, we find that real jailbreak attacks on LLMs also use strategies similar to our theory-based derivations.
-Our work suggests that investigations on smaller theoretical models and well-designed setups can yield insights into the mechanics of real-world rule-subversions, particularly jailbreak attacks on large language models.
-In summary:
-* Small transformers can theoretically encode and practically learn inference in propositional Horn logic.
-* Theory-based attacks transfer to practice.
-* Existing LLM jailbreaks mirror these theory-based attacks.
--->
 
 
 {% include gallery id="gallery_results_overview" caption="An overview of our results. We devise jailbreak attacks in a simplified theoretical setting that transfer to learned reasoners. Moreover, real jailbreaks on real LLMs exhibit similar strategies as our theory-based setup." %}
@@ -282,6 +258,7 @@ Interestingly, these theory-based attacks also transfer to models learned from d
 
 Our main findings are as follows.
 First, we show that a transformer with only **one layer** and **one self-attention head** has the *theoretical capacity* to encode one step of inference in propositional Horn logic.
+Second, we show that our simplified, theoretical setup is backed by empirical experiments on LLMs.
 Moreover, we find that our simple theoretical construction is susceptible to attacks that target all three failure modes of inference.
 
 
@@ -312,6 +289,14 @@ Our theoretical construction is not the [only one](https://arxiv.org/abs/2205.11
 A small size is generally an advantage for theoretical analysis and, in our case, allows us to more easily derive attacks against our theoretical construction.
 
 
+Although we don't know how to provably guarantee that a transformer learns the correct weights, we can empirically show that a binarized representation of propositional proof states is not implausible in LLMs.
+Below, we see that standard linear probing techniques can accurately recover the correct proof state at deeper layers of GPT-2 (which has 12 layers total), evaluated over four random subsets of the Minecraft dataset.
+
+{% include gallery id="gallery_binary_accs" caption="Standard linear probing can accurately recover the binary-valued proof states during LLM evaluation. This gives an LLM-based empirical justification for our theoretical setup." %}
+
+
+
+<!--
 Although we don't know how to provably guarantee that a transformer learns the correct weights, we can empirically evaluate the performance of learned models.
 By fixing an architecture of one layer and one self-attention head while varying the number of propositions and embedding dimensions, we see that models subject to our theoretical constraints **can** learn inference to a high accuracy.
 
@@ -320,7 +305,7 @@ By fixing an architecture of one layer and one self-attention head while varying
 In particular, we observe that models of size $d \geq 2n$ can consistently learn propositional inference to high accuracy, whereas those at $d < 2n$ begin to struggle.
 These experiments provide evidence that our theoretical setup of $d = 2n$ is not a completely unrealistic setup on which to study rule-following.
 It is an open problem to better understand the training dynamics and to verify whether these models provably succeed in achieving the "correct" weights.
-
+-->
 
 ### Theory-based Attacks Manipulate the Attention
 

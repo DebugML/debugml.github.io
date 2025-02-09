@@ -1,0 +1,94 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  fetch('../assets/other/ctsketch/ranking.json')
+    .then(response => response.json())
+    .then(data => {
+
+      let timeData = data;
+
+      // Function to generate datasets
+      function generateDatasets(data) {
+        const colors = {
+          'full': 'olive',
+          '8': 'violet',
+          '4': 'orange',
+          '2': 'cyan'
+        };
+
+        const datasets = data.flatMap(datum => {
+          const mainData = datum.x.map((x, i) => ({ x: x, y: datum.y[i] }));
+
+          return [
+            {
+              label: datum.caption,
+              data: mainData,
+              borderColor: colors[datum.type],
+              backgroundColor: 'rgba(0,0,0,0)', // Transparent background
+              borderWidth: 2,
+              fill: '-1',
+              showLine: true, // To draw the line between points
+              order: 2,
+              datasetLabel: datum.caption
+            },
+          ];
+        });
+
+        return datasets;
+      }
+
+      const timeCtx = document.getElementById('time-compare-canvas').getContext('2d');
+      const timeChart = new Chart(timeCtx, {
+        type: 'scatter',
+        data: {
+          datasets: generateDatasets(timeData)
+        },
+        options: {
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom',
+              title: {
+                display: true,
+                text: 'Time (s)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Accuracy'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const dataPoint = context.raw;
+                  return context.dataset.label.includes('Bound') ? '' : `${context.dataset.label}: (${dataPoint.x}, ${dataPoint.y})`;
+                }
+              }
+            },
+            legend: {
+              display: true,
+              onClick: function (e, legendItem, legend) {
+                // Prevent the default behavior of hiding datasets
+              }
+            },
+            title: {
+              display: true,
+              text: 'Accuracy vs Time for different sketching ranks',
+              font: {
+                size: 18
+              },
+              padding: {
+                top: 10,
+                bottom: 10
+              }
+            }
+          }
+        }
+      });
+    });
+</script>
+
+<canvas id="time-compare-canvas"></canvas>

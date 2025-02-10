@@ -10,9 +10,9 @@
       function generateDatasets(data) {
         const colors = {
           'full': 'olive',
-          '8': 'violet',
-          '4': 'orange',
-          '2': 'cyan'
+          '8': '#C853AD',
+          '4': '#DC7633',
+          '2': '#3498DB'
         };
 
         const datasets = data.flatMap(datum => {
@@ -36,7 +36,7 @@
         return datasets;
       }
 
-      const timeCtx = document.getElementById('time-compare-canvas').getContext('2d');
+      const timeCtx = document.getElementById('rank-canvas').getContext('2d');
       const timeChart = new Chart(timeCtx, {
         type: 'scatter',
         data: {
@@ -91,4 +91,4 @@
     });
 </script>
 
-<canvas id="time-compare-canvas"></canvas>
+<canvas id="rank-canvas"></canvas>

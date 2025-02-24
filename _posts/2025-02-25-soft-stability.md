@@ -85,8 +85,9 @@ To ensure that a explanation is actually reliable, we study stability as a desir
 We find that the previously proposed hard stability has fundamental limitations, and thus introduce an alternative, more relaxed variant of stability, called soft stability.
 
 
-{% include gallery id="gallery_unstable" layout="" caption="**An unstable selection of features from SHAP.**\\
-Although the image masked by the original explanation makes the same prediction as the original image (the second row vs. the first row), adding one patch to the explanation changes the highest predicted class from 'candon' to 'artichoke'." %}
+{% include gallery id="gallery_unstable" layout="" caption="**An unstable selection of features from LIME.**\\
+Although the masked image induces the same prediction as the original image, adding four additional features (patches) to the chosen explanation causes the prediction to change from 'Walker hound' to 'Beagle'.
+This is not desirable because it suggests that the explanation (selected features) given by LIME is sensitive to the addition of new information." %}
 
 Before getting into what stability entails, let us ground our discussion by first establishing that intuitively, “similar” attributions should *induce* the same prediction with respect to a given classifier and input.
 Although various measures of similarity exist, we focus on additive perturbations. Specifically, an additive perturbed attribution is one that contains more information (features) than the original attribution, where the intuition is that adding more features to a “good quality” should not easily alter the prediction. 
@@ -194,21 +195,21 @@ That is, each feature is randomly masked (zeroed, dropped) with probability $1 -
 We say that smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing occurs because $M_1 f(x) = f(x)$; at $\lambda = 1/2$, half the features of $x \odot z$ are zeroed out on average;
 at $\lambda = 0$, the classifier predicts on an entirely zeroed input because $M_0 f(x) = f(\mathbf{0}_n)$. Random masking is also called multiplicative smoothing because the noise scales the input, unlike standard additive noising.
 
-In addition to random masking, we use Boolean function analysis tools, which studies real-valued functions of Boolean-valued inputs, to analyze the masked version of feature attributions.
+In addition to random masking, we use Boolean function analysis, which studies real-valued functions of Boolean-valued inputs, as tools to analyze the masked version of feature attributions. Our main theoretical finding is as follows:
 
-Our main theoretical finding is that smoothing improves the worst-case stability rate by a factor of $\lambda$.
+**Theorem (Informal).** [Smoothing Stability Result] Smoothing improves the worst-case stability rate by a factor of $\lambda$.
 {: .notice--danger}
 
 Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.
 Interestingly, we found it challenging to bound the stability rate of $M_\lambda$-smoothed classifiers using standard Boolean analytic techniques.
-This motivated us to develop novel analytic tooling, the process of which we describe in the next section.
+This motivated us to develop novel analytic tooling, which we leave the details and experiments for in the [paper]().
 
 <!-- (one paragraph and one informal statement of the theorem)
 smoothing helps because boolean basis~~~ if you want to learn more about it, you can check out our paper
 this method worked on all models, including smoothed models. as it turns out, we can prove smoothing improves the certificate
 give some informal intuition -->
 
-For more details and experiments, including those that address the questions of whether smoothing degrade accuracy and how smoothing affect soft stability, please see our [paper]().
+<!-- For more details and experiments, including those that address the questions of whether smoothing degrade accuracy and how smoothing affect soft stability, please see our [paper](). -->
 
 <!-- ## Experimental Takeaways
 ### Soft Stability Certifies More Than Hard Stability

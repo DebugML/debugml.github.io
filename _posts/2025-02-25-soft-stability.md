@@ -59,9 +59,10 @@ gallery_soft_certifies_more:
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
 </script>
 
-> Stability guarantees are important for feature attributions, but existing certification methods rely on smoothed classifiers and yield overly conservative bounds.
+> Stability guarantees are an important tool for understanding how reliable feature attributions are. 
+> However, existing certification methods rely on smoothed classifiers and yield overly conservative bounds that are not as informative.
 > To address this, we introduce the concept of soft stability and propose a sampling-based certification algorithm that is both model-agnostic and sample-efficient.
-> We validate our approach through experiments on vision and language tasks with various feature attribution methods.
+> We find that our proposed probabilistic stability guarantees provide a better way to encapsulate the reliability of feature attributions on both vision and language tasks.
 
 ## Background
 Powerful machine learning models are increasingly deployed in practice. 
@@ -80,13 +81,14 @@ but hard stability has fundamental limitations -->
 
 
 ## Hard Stability vs. Soft Stability
-To ensure that a explanation is actually good, we study stability as a desirable property. 
-We find that hard stability has fundamental limitations, and introduce a more relaxed variant called soft stability.
+To ensure that a explanation is actually reliable, we study stability as a desirable property. 
+We find that the previously proposed hard stability has fundamental limitations, and thus introduce an alternative, more relaxed variant of stability, called soft stability.
+
 
 {% include gallery id="gallery_unstable" layout="" caption="**An unstable selection of features from SHAP.**\\
 Although the image masked by the original explanation makes the same prediction as the original image (the second row vs. the first row), adding one patch to the explanation changes the highest predicted class from 'candon' to 'artichoke'." %}
 
-Before getting into what stability entails, let us ground our discussion by first establishing that “similar” attributions should *induce* the same prediction with respect to a given classifier and input.
+Before getting into what stability entails, let us ground our discussion by first establishing that intuitively, “similar” attributions should *induce* the same prediction with respect to a given classifier and input.
 Although various measures of similarity exist, we focus on additive perturbations. Specifically, an additive perturbed attribution is one that contains more information (features) than the original attribution, where the intuition is that adding more features to a “good quality” should not easily alter the prediction. 
 
 **Definition.** [Additive Perturbations]
@@ -99,39 +101,36 @@ $$\\
 where $\alpha' \geq \alpha$ iff each $\alpha_i ' \geq \alpha_i$ and $||\cdot||_0$ denotes the $\ell^0$ norm, which measures the number of non-zero coordinates.
 {: .notice--info}
 
-Intuitively, $\Delta_r (\alpha)$ represents the set of attributions that are
-at least as informative as $\alpha$, differing by at most $r$ features. 
-This allows us to study the robustness of explanations by analyzing whether small modifications in feature selection affect the model’s prediction. 
-A natural way to formalize such robustness is through **stability**: an attribution should be considered *stable* if adding a small number of features does not alter the classifier’s decision. 
+Intuitively, $\Delta_r (\alpha)$ represents the set of attributions that are at least as informative as $\alpha$, adding at most $r$ features. 
+We can then study the robustness of an explanation by analyzing its **stability**: an attribution should be considered *stable* if adding a small number of features does not alter the classifier’s decision. 
 First introduced in the [MuS blog post](https://debugml.github.io/multiplicative-smoothing/) as "incrementally stable", hard stability is defined as follows:
 
 **Definition.** [Hard Stability]
-For a classifier $f$ and input $x$, the explanation $\alpha$ is *hard-stable* 
-with radius $r$ if:
+For a classifier $f$ and input $x$, the explanation $\alpha$ is *hard-stable* with radius $r$ if:
 $f(x \odot \alpha') \cong f(x \odot \alpha)$ for all $\alpha' \in \Delta_r$.
 {: .notice--info}
 
-In practice however, hard stability can be non-trivial to certify, and its smoothing requirement has performance tradeoffs. 
-A key limitation of smoothing-based certificates is that the stability guarantees apply to the smoothed classifier, not the original classifier. 
+Hard stability says an explanation is stable up to radius $r$ if for all cases of adding $r$ features, the prediction does not change.
+Although this gives a strong argument, a key limitation is that hard stability can only give guarantees on smoothed classifiers, instead of the original classifiers.
 Increased smoothness leads to larger certified radii but at the cost of accuracy. 
 This trade-off arises because excessive smoothing reduces a model’s sensitivity, making it harder to distinguish between classes. 
 Moreover, even when smoothing-based certification is feasible, the resulting certified radii are often conservative because the radii depend on a global property (the Lipschitz constant κ) to make local guarantees about feature perturbations.
 
-To address these limitations, we look into a probabilistic relaxation of
-hard stability that avoids the need to smooth the classifier. We introduce the notion of soft stability for an explanation as follows: 
+To address these limitations, we look into a probabilistic relaxation of hard stability that avoids the need to smooth the classifier. 
+We introduce the notion of soft stability for an explanation as follows: 
 
 **Definition.** [Soft Stability]
 For a classifier $f$ and input $x$, define the *stability rate* of attribution $\alpha$ at radius $r$ as:
 $$\\ 
 \begin{equation*}
     \tau_r (f, x, \alpha) = \text{Pr}_{\alpha' \sim \Delta_r} [f(x \odot \alpha') \cong f(x \odot \alpha)],
-\end{equation*} \\$$
+\end{equation*}$$
 where $\alpha' \sim \Delta_r$ is uniformly sampled.
 {: .notice--info}
 
 
 While hard stability certifies whether all small perturbations to an attribution yield the same prediction, soft stability quantifies how often the prediction remains consistent. 
-In general, probabilistic guarantees are more flexible to apply and efficient to compute compared to their hard variants.
+In general, compared to their hard variants, probabilistic guarantees are more flexible to apply and efficient to compute, and can certify larger radii. In the following example, we can see that hard stability only certifies up to 1 patch, while soft stabitiliy certifies up to 5 patches. 
 
 {% include gallery id="gallery_hard_vs_soft" layout="" caption="**A visual example of certified radii by hard stability vs. soft stability.** \\
 For an image of a penguin masked to show only the top 44% explanation by LIME, hard stability certifies that adding one patch won't change the prediction. In contrast, soft stability can certify adding up to 5 patches with a probabilistic guarantee." %}
@@ -178,11 +177,38 @@ To remedy this, one can always take more samples to get closer to the true soft 
 ## Mild Smoothing Improves Soft Stability
 Should we completely abandon smoothing? It turns out no, not necessarily. Although the soft stability certification algorithm does not explicitly require smoothing, we observe that mildly smoothing the model empirically improves stability rates.
 
-We now introduce the multiplicative smoothing operator originally used to certify hard stability in the previous [MuS blog post](https://debugml.github.io/multiplicative-smoothing/), wherein the main idea is for the smoothed classifier to be more robust to the inclusion and exclusion of features.
+We now introduce the multiplicative smoothing operator originally used to certify hard stability in the previous [MuS blog post](https://debugml.github.io/multiplicative-smoothing/), wherein the main idea is for the resulting smoothed classifier to be more robust to the inclusion and exclusion of features. 
+This is achieved by randomly masking features in the following process. 
 
-### Question: How much does smoothing degrade accuracy? 
+**Definition.** [Random Masking]
+For any classifier $f$ and smoothing parameter $\lambda \in [0,1]$, define the random masking operator $M_\lambda$ as:
+$$\begin{equation*}
+    M_\lambda f (x)
+    = \mathbb{E}_{z \sim \text{Bern} (\lambda)^n} f(x \odot z), \\
+    \text{where \(z_1, \ldots, z_n \sim \text{Bern}(\lambda)\) are i.i.d. samples.}
+\end{equation*}$$
+{: .notice--info}
 
-### Question: How does smoothing affect soft stability? 
+One can think of the smoothing parameter $\lambda$ as the probability that any given feature is kept.
+That is, each feature is randomly masked (zeroed, dropped) with probability $1 - \lambda$.
+We say that smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing occurs because $M_1 f(x) = f(x)$; at $\lambda = 1/2$, half the features of $x \odot z$ are zeroed out on average;
+at $\lambda = 0$, the classifier predicts on an entirely zeroed input because $M_0 f(x) = f(\mathbf{0}_n)$. Random masking is also called multiplicative smoothing because the noise scales the input, unlike standard additive noising.
+
+In addition to random masking, we use Boolean function analysis tools, which studies real-valued functions of Boolean-valued inputs, to analyze the masked version of feature attributions.
+
+Our main theoretical finding is that smoothing improves the worst-case stability rate by a factor of $\lambda$.
+{: .notice--danger}
+
+Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.
+Interestingly, we found it challenging to bound the stability rate of $M_\lambda$-smoothed classifiers using standard Boolean analytic techniques.
+This motivated us to develop novel analytic tooling, the process of which we describe in the next section.
+
+<!-- (one paragraph and one informal statement of the theorem)
+smoothing helps because boolean basis~~~ if you want to learn more about it, you can check out our paper
+this method worked on all models, including smoothed models. as it turns out, we can prove smoothing improves the certificate
+give some informal intuition -->
+
+For more details and experiments, including those that address the questions of whether smoothing degrade accuracy and how smoothing affect soft stability, please see our [paper]().
 
 <!-- ## Experimental Takeaways
 ### Soft Stability Certifies More Than Hard Stability
@@ -195,7 +221,8 @@ We now introduce the multiplicative smoothing operator originally used to certif
 
 
 ## Conclusion
-In this post, we relax the constraints needed for hard stability and present probablistic stability guarantees as a formal property for feature attribution methods: a selection of features is *soft stable* if the additional inclusion of other features uniformly sampled do not alter its induced class.
+In this post, we relax the constraints needed for hard stability and present probablistic stability guarantees as a formal property for feature attribution methods: a selection of features is *soft stable* if the additional inclusion of other features uniformly sampled does not alter its induced class. 
+<!-- In practice, however, hard stability can be non-trivial to certify, and its smoothing requirement has performance tradeoffs.  -->
 
 For more details in thoeretical proofs and experiments, kindly refer to our [paper]() and [code]().
 

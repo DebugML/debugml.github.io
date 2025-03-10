@@ -104,10 +104,10 @@ However, these explanations that are the selected features are often brittle, as
 
 
 {% include gallery id="gallery_unstable" layout="" caption="**An unstable selection of features from LIME.**\\
-Given an input image (top), [LIME](https://github.com/marcotcr/lime) selects features it deems important for the classifier $f$'s prediction (middle). However, adding just four additional features causes the prediction to change from 'Walker hound' to 'Beagle' (bottom). This suggests that the explanation is highly sensitive to the inclusion of additional features, making it unreliable."%}
+Given an input image (top), [LIME](https://github.com/marcotcr/lime){:target='_blank'} selects features it deems important for the classifier $f$'s prediction (middle). However, adding just four additional features causes the prediction to change from 'Walker hound' to 'Beagle' (bottom). This suggests that the explanation is highly sensitive to the inclusion of additional features, making it unreliable."%}
 
 An ideal explanation should be *robust*: if a subset of features is genuinely explanatory for the prediction, then revealing additional features should not cause the prediction to change. 
-In our [previous blog post](https://debugml.github.io/multiplicative-smoothing/), we introduced the concept of **stability guarantees**, which aim to certify the robustness of explanations. However, existing methods suffer from two major limitations:
+In our [previous blog post](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"}, we introduced the concept of **stability guarantees**, which aim to certify the robustness of explanations. However, existing methods suffer from two major limitations:
 - They rely on *specialized architectures*, in particular smoothed classifiers, which constrain their applicability.
 - Their guarantees are *overly conservative*, meaning they certify only small perturbations, limiting practical use.
 
@@ -120,24 +120,28 @@ In this work, we introduce soft stability, a novel approach to robustness that o
 The core idea behind stability is to measure how an explanation's prediction changes as more features are revealed.
 We illustrate this concept as follows.
 
-{% include gallery id="gallery_algo" layout="" caption="When randomly revealing up to $r=4$ features to a given explanation, the prediction remains unchanged 95.3% of the time." %}
+{% include gallery id="gallery_algo" layout="" caption="When revealing up to $r=4$ features of a given explanation uniformly at random, the prediction remains unchanged 95.3% of the time." %}
 
-[Our previous work](https://debugml.github.io/multiplicative-smoothing/) introduced **hard stability**, a property that ensures a prediction remain unchanged for perturbations up to a certain tolerance. 
-However, determining this tolerance is challenging: computing the maximum tolerance is computationally expensive, while the lower bound requires specialized architectures (smoothed classifiers). 
-Thus, it is difficult to provably guarantee to what point explanations maintain hard stability.
+[Our previous work](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"} introduced **hard stability**, a property that ensures a prediction remain unchanged for perturbations up to a certain tolerance. 
+However, determining this tolerance is challenging: computing the maximum tolerance is computationally expensive, while a lower bound requires specialized architectures (smoothed classifiers). 
+Because it is difficult to provably guarantee to what point explanations remain hard stable, we propose an alternative approach.
 
 <!-- even then, the certifiable tolerance is often too small to be practical and lower than empirically observed limits. -->
 
 ### Soft stability: a more flexible alternative
 Instead of requiring that *all* perturbations do not flip the prediction, we propose a probabilistic approach that measures how often the prediction changes:
 
-**Definition. [Soft Stability]**
-At radius $r$, an explanation's **stability rate** $\tau_r$ is the probability that adding up to $r$ additional features does not change the prediction.
-{: .notice--info}
+<div class="notice--info">
+<strong> Definition. [Soft Stability] </strong> <br>
+At radius $r$, an explanation's <strong> stability rate </strong> $\tau_r$ is the probability that adding up to $r$ additional features does not change the prediction. 
+<br> <br>
+<em> Note: </em> Following robustness conventions, we refer to perturbuation size as "radius".
+</div>
 
-In the previous example, at radius $r = 4$, the stability rate is $\tau_4 = 95.3$%.
-Note that soft stability is a generalization of hard stability, which simply states that the explanation is *not* hard stable at radius $4$ because the stability rate is $< 100$%.
-By making this simple shift to a probabilistic perspective, soft stability offers two key benefits:
+In the above 'Walker hound' example, the stability rate at radius $r = 4$ is $\tau_4 = 95.3$%.
+Note that soft stability is a generalization of hard stability, which can only give a yes/no statement about robustness---in this case, the explanation is *not* hard stable at radius $r = 4$ because $\tau_4 < 100$%.
+By simply shifting to a probabilistic perspective, soft stability offers a more refined view of explanation robustness.
+The two key benefits are:
 1. **Model-agnostic certification**: The soft stability rate is efficiently computable for any classifier, whereas hard stability is only easy to certify for smoothed classifers.
 2. **Practical guarantees**: The certificates for soft stability are much larger and more practically useful than those obtained from hard stability.
 
@@ -154,7 +158,9 @@ The fundamental difference between hard and soft stability lies in how they defi
 | **Hard Stability** | *All* perturbations up to $r$ features leave the prediction unchanged. | Expensive to certify; requires smoothed classifiers. |
 | **Soft Stability** | The prediction remains unchanged *with high probability*. | Efficient, sample-based estimation. |
 
-Both hard stability and soft stability describe how predictions change as features are revealed. *Hard stability* ensures that revealing up to $r$ features *always* preserves the prediction, while *soft stability* measures how often this holds. We use *radius* $r$ to quantify perturbations, following adversarial robustness conventions. Hard stability is a stricter condition, guaranteeing invariance for all perturbations within $r$, whereas soft stability allows for occasional changes. When the stability rate reaches 100%, soft stability becomes equivalent to hard stability. This is further illustrated in the figure below.
+Both hard stability and soft stability describe how predictions change as features are revealed. 
+Hard stability ensures that revealing up to $r$ features *always* preserves the prediction, while soft stability measures how often this holds. 
+Hard stability is a stricter condition, guaranteeing invariance for all perturbations within $r$, whereas soft stability allows for occasional changes. When the stability rate reaches 100%, soft stability becomes equivalent to hard stability. This is further illustrated in the figure below.
 
 {% include gallery id="gallery_hard_vs_soft" layout="" caption="**A visual example of certified radii by hard stability vs. soft stability.** \\
 For an image of a penguin masked to show only the top 44% explanation by LIME, hard stability certifies that adding one patch won't change the prediction. In contrast, soft stability can certify adding up to 5 patches with a probabilistic guarantee." %}
@@ -162,33 +168,44 @@ For an image of a penguin masked to show only the top 44% explanation by LIME, h
 For the remainder of this section, we will discuss the computational details for certifying hard stability and soft stability. 
 
 ### Computational difficulties in certifying hard stability
-split into 2 paragraphs: 
-- P1: why the max toelrance is hard to find
-- P2: issues with smoothing-based lower bound
+Certifying hard stability is challenging because determining the maximum tolerance---the largest perturbation radius at which the prediction remains unchanged---requires exhaustively checking all possible perturbations up to that radius to ensure none cause a prediction flip. 
+When a classifier lacks mathematically convenient properties, this process becomes computationally intractable, especially in high-dimensional spaces where the number of possible perturbations grows rapidly. 
+For instance, if there are $m$ possible features that can be included, the total number of cases to check up to radius $r \leq m$ is given by $\binom{m}{1} + \binom{m}{2} + \cdots + \binom{m}{r}$, leading to a combinatorial explosion of $\mathcal{O}(m^r)$ complexity that makes brute-force verification impractical for real-world models.
 
-Certifying hard stability is non-trivial.
-This is because if the classifier lacks mathematically convenient properties, then one must check a computationally intractable nuber of possible perturbasitons to ensure that all perturbations up to some radius do not cause the prediction flip.
-The approach for doing this in our previous work is by using specialized architectures, in particular, smoothed classifiers.
-We refer to a [later section](#mild-smoothing-improves-soft-stability) for details about how this smoothing procedure works.
-The main idea is to take an existing classifier, and then modify it to have convenient proeprties, with which we wmay then quickyl check that perturbations up to blah blah balh.
-However, this process is not good because the smoothed classifier is not very good at this accuracy business.
+To address this challenge, prior work relies on [smoothing classifiers](#mild-smoothing-improves-soft-stability),
+to attain mathematical properties more amenable for hard stability certification.
+Specifically, computing a lower bound on the maximum tolerance becomes more tractable with a smoothed classifier.
+However, smoothed classifiers come with significant drawbacks. 
+First, the resulting stability guarantees only apply to the smoothed classifier rather than the original one.
+Second, because smoothing often degrades accuracy, the guarantees are with respect to an (often) worse model.
+Third, the bounds tend to be too conservative, certifying much smaller perturbation radii than what empirical sampling suggests is achievable ([Xue et al. 2024, Section 4.1](https://arxiv.org/abs/2307.05902){:target="_blank"}).
+This discrepancy limits the practical utility of smoothed classifiers for stability certification.
 
 
 ### Sample-efficient algorithm for certifying soft stability
-In contrast to the above very computationally stupid way of certifying hard stability, we can in fact certify soft stability --- in particular the stability rate --- through a very standard sampling process.
-We describe this algortihm in the following manner.
+In contrast to the computationally expensive approach required for certifying hard stability, soft stability---specifically the stability rate---can be efficiently estimated using a standard sampling process. We describe this algorithm below.
 
+<div class="notice--success">
+<strong>Algorithm for estimating the stability rate $\tau_r$.</strong> <br>
 
-**Algorithm for estimating the stability rate $\tau_r$.** \\
-To estimate the soft stability at radius $r$ to accuracy $\varepsilon$ and confidence $1 - \delta$, it suffices to take $N \geq \frac{\log(2/\delta)}{2 \varepsilon^2}$ samples uniformly from the additive perturbations of size $\leq r$.
-The stability rate estimator $\hat{\tau}_r$ will satisfy $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$ with probability $\geq 1 - \delta$.
-{: .notice--danger}
+We can compute an estimator $\hat{\tau}_r$ in the following manner: <br>
 
+<div style="margin-left: 20px;">
+1. Sample (uniformly, with replacement) $N$ perturbations of the explanation, where each perturbation includes at most $r$ additional features. <br>
+
+2. Let $\hat{\tau}_r$ be the fraction of the samples whose predictions match the original explanation's prediction. <br>
+</div>
+ 
+If $\hat{\tau}_r$ is computed with $N \geq \frac{\log(2/\delta)}{2 \varepsilon^2}$ samples, then the following holds: 
+with probability at least $1 - \delta$, its estimation accuracy is $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$.
+</div>
 
 The resulting estimated soft stability rate $\hat{\tau}_r$ is accurate to the true stability rate $\tau_r$ with high confidence.
+For example, for $\delta = 0.05$ and $\varepsilon = 0.1$, taking $N \geq 185$ samples allows the estimator $\hat{\tau}_r$ to fall within $0.1$ of the true $\tau_r$ at least $95$% of the time. 
+
 In other words, with probability $\geq 1 - \delta$, we have that $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$.
-The technical details follow by standard theoretical concentrations on sampling. 
-We give a demonstration of this estimation process in our [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb). 
+The technical details follow by standard concentration theorems on sampling. 
+We give a demonstration of the stability rate estimation algorithm in the following [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}. 
 
 
 There are three main computational benefits of estimating soft stability in this manner.
@@ -205,12 +222,12 @@ Next, we give some experimental evaluations that compare soft and hard stability
 We next consider how soft stability compares with hard stability in practice. 
 We empirically evaluate on vision and language tasks.
 
-Below, we show the stability rates we can attain on [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224), when taking $1000$ examples from ImageNet.
+Below, we show the stability rates we can attain on [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"}, when taking $1000$ examples from ImageNet.
 
 
 {% include gallery id="gallery_soft_certifies_more" layout="" caption="**Soft stability certifies more than hard stability.** LIME and SHAP showing a sizable advantage over IntGrad, MFABA, and random baselines across all radii." %}
 
-Next, we show the stability rates we can attain on [RoBERTa]() and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval).
+Next, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
 
 {% include gallery id="gallery_soft_certifies_more_tweeteval" layout="" caption="**Soft stability certifies more than hard stability.** " %}
 
@@ -229,69 +246,45 @@ Although the algorithm for certifying does not require a smoothed classifier, we
 <details>
 <summary>Click for details</summary>
 <div markdown="1">
-The particular type of smoothing we consider was introduced in our previous [blog post](https://debugml.github.io/multiplicative-smoothing/), which we call *multiplicative smoothing*.
-One might alternatively think of this as randomized masking (i.e., dropping, zeroing) of features, which we describe next.
+
+
+The particular smoothing implementation we consider involves randomly masking (i.e., dropping, zeroing) features, which we define as follows.
 
 **Definition. [Random Masking]**
-For an input $x \in \mathbb{R}^d$ and classifier $f$, define the smoothed classifier as $\tilde{f}(x) = \mathbb{E}_{\tilde{x}} f(\tilde{x})$, where independently for each feature $x_i$, the smoothed feature is $\tilde{x}_i = x_i$ with probability $\lambda$, and $\tilde{x}_i = 0$ with probability $1 - \lambda$.
-<!-- For any input $x \in \mathbb{R}^d$, define the smoothed classifier as $\tilde{f}(x) = \mathbb{E} f(\tilde{x})$, where for all $i = 1, \ldots, d$, we independently have: $\tilde{x}_i = x_i$ with probability $\lambda$, and $\tilde{x}_i = 0$ with probability $1 - \lambda$. -->
-<!-- 
-For any classifier $f$ and smoothing parameter $\lambda \in [0,1]$, define the random masking operator $M_\lambda$ as:
-$$\begin{equation*}
-   M_\lambda f (x)
-   = \mathbb{E}_{z \sim \text{Bern} (\lambda)^n} f(x \odot z), \\
-   \text{where \(z_1, \ldots, z_n \sim \text{Bern}(\lambda)\) are i.i.d. samples.}
-\end{equation*}$$ -->
+For an input $x \in \mathbb{R}^d$ and classifier $f: \mathbb{R}^d \to \mathbb{R}^m$, define the smoothed classifier as $\tilde{f}(x) = \mathbb{E}_{\tilde{x}} f(\tilde{x})$, where independently for each feature $x_i$, the smoothed feature is $\tilde{x}_i = x_i$ with probability $\lambda$, and $\tilde{x}_i = 0$ with probability $1 - \lambda$.
 {: .notice--info}
 
 
-One can think of the smoothing parameter $\lambda$ as the probability that any given feature is kept.
-That is, each feature is randomly masked (zeroed, dropped) with probability $1 - \lambda$.
-We say that smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing occurs because $\tilde{x} = x$ always; at $\lambda = 1/2$, half the features of $x$ are zeroed out on average; at $\lambda = 0$, the classifier predicts on an entirely zeroed input because $\tilde{x} = 0_d$. 
-Random masking is also called multiplicative smoothing because the noise scales the input.
+In the [original context](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"} of certifying hard stability, this was also referred to as *multiplicative smoothing* because the noise scales the input.
+One can think of the smoothing parameter $\lambda$ as the probability that any given feature is kept, i.e., each feature is randomly masked (zeroed, dropped) with probability $1 - \lambda$.
+Smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing occurs because $\tilde{x} = x$ always; at $\lambda = 1/2$, half the features of $x$ are zeroed out on average; at $\lambda = 0$, the classifier predicts on an entirely zeroed input because $\tilde{x} = 0_d$.
 
 
-In addition to random masking, we use Boolean function analysis, which studies real-valued functions of Boolean-valued inputs, as tools to analyze the masked version of feature attributions. Our main theoretical finding is as follows.
-
+To study the relation between smoothing and stability rate, we use tools from [Boolean function analysis](https://en.wikipedia.org/wiki/Analysis_of_Boolean_functions){:target="_blank"}.
+Our main theoretical finding is as follows.
 
 **Main Result.**  Smoothing improves the worst-case stability rate by a factor of $\lambda$.
-{: .notice--danger}
+{: .notice--success}
 
-In more detail, given some classifier $f$, input $x$, and explanation $\alpha$.
-Let $\mathcal{Q}$ be a quantity that depends on $f$ (specifically, its Boolean Fourier spectrum).
-Then, the stability rate between the original classifier $f$ and a smoothed classifier $\tilde{f}$ satisfies the relation:
+
+
+In more detail, for any fixed input-explanation pair, the stability rate of any classifier $f$ and the stability rate of its smoothed variant $\tilde{f}$ have the following relationship:
+
+
 
 $$
-1 - \mathcal{Q} \leq \tau_r (f, x, \alpha) \,\, \implies\,\, 1 - \lambda \mathcal{Q} \leq \tau_r (\tilde{f}, x, \alpha)
+1 - \mathcal{Q} \leq \tau_r (f) \,\, \implies\,\, 1 - \lambda \mathcal{Q} \leq \tau_r (\tilde{f}),
 $$
+
+where $\mathcal{Q}$ is a quantity that depends on $f$ (specifically, its Boolean Fourier spectrum).
+
+<!-- 
+ and the stability rates are computed with respect to $x$ and $\alpha$. -->
 
 
 Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.
-Interestingly, we found it challenging to bound this improvement using standard Boolean analytic techniques.
-This motivated us to develop novel analytic tooling, which we leave the details and experiments for in the [paper]().
-
-
-<!-- (one paragraph and one informal statement of the theorem)
-smoothing helps because boolean basis~~~ if you want to learn more about it, you can check out our paper
-this method worked on all models, including smoothed models. as it turns out, we can prove smoothing improves the certificate
-give some informal intuition -->
-
-
-<!-- For more details and experiments, including those that address the questions of whether smoothing degrade accuracy and how smoothing affect soft stability, please see our [paper](). -->
-
-
-<!-- ## Experimental Takeaways
-### Soft Stability Certifies More Than Hard Stability
-
-
-### Mildly Smoothing Preserves Accuracy
-
-
-### Smoothing Improves Stability
-
-
-### Stability Improves with Larger Selections -->
-
+Interestingly, we found it challenging to bound this improvement using [standard techniques](https://arxiv.org/abs/2105.10386){:target="_blank"}.
+This motivated us to develop novel theoretical tooling, which we leave the details and experiments for in the [paper](){:target="_blank"}.
 
 </div>
 </details>
@@ -300,11 +293,11 @@ give some informal intuition -->
 ## Conclusion
 In this blog post, we explore a practical variant of stability guarantees that improves upon existing methods in the literature.
 
-For more details, please check out our [paper]() and [code]().
+For more details, please check out our [paper](){:target="_blank"}, [code](https://github.com/helenjin/soft_stability/){:target="_blank"}, and [tutorial](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}.
 
 
 Thank you for reading!
-If you find our work helpful, please consider citing it.
+If you find our work helpful, please consider citing it!
 
 ```bibtex
 @article{jin2025softstability,

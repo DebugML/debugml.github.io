@@ -579,3 +579,22 @@ Lyle Ungar:
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://www.cis.upenn.edu/~ungar/"
+
+Arthur Wayne:
+  name    : "Arthur Wayne"
+  avatar  : "https://arthursolwayne.com/pfp.png"
+  bio     : "Researcher at Penn"
+  home    : https://arthursolwayne.com/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:artwayne@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://arthursolwayne.com"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://x.com/arthursolwayne"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/arthursolwayne"

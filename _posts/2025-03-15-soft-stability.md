@@ -28,15 +28,21 @@ authors:
 
 
 gallery_hard_vs_soft:
- - url: /assets/images/soft_stability/hard_vs_soft_real.png
-   image_path: /assets/images/soft_stability/hard_vs_soft_real.png
-   title: A visual example of certified radii by hard stability vs. soft stability.
+ - url: /assets/images/soft_stability/hard_vs_soft_pipeline.png
+   image_path: /assets/images/soft_stability/hard_vs_soft_pipeline.png
+   title: A visual example of the pipeline to find certified radii by hard stability vs. soft stability.
 
 
 gallery_unstable:
  - url: /assets/images/soft_stability/unstable.png
    image_path: /assets/images/soft_stability/unstable.png
    title: An unstable selection of features from SHAP.
+
+
+gallery_lime_vs_shap_soft:
+ - url: /assets/images/soft_stability/lime_vs_shap_soft.png
+   image_path: /assets/images/soft_stability/lime_vs_shap_soft.png
+   title: 
 
 
 gallery_algo:
@@ -84,19 +90,6 @@ gallery_soft_certifies_more_tweeteval:
 > To address these limitations, we introduce **soft stability**, a more general and flexible approach for certifying explanations that works with any model and gives more useful guarantees. 
 > Our guarantees are orders of magnitude greater than existitng methods and can scale to be usable in practice in high-dimensional settings.
 
-<!-- condense all this to 2 paragraphs:
-1) feature attributions are unreliable
-2) stability was introduced in blog post and its limitations, talk about hard stability vs soft stability definitions in the soft stability section
- -->
-
-<!-- - feature attributions are unreliable, here is what we mean
-- figure
-- why unstable explanation is undesirable
-- we study this problem in a previous blog post
-- stability
-- current certificate requires smoothing and is overly conservative
-- limitations -->
-
 Powerful machine learning models are increasingly deployed in real-world applications. 
 However, their opacity poses a significant challenge to safety, especially in high-stakes settings where interpretability is critical for decision-making. 
 A common approach to explaining these models is through feature attributions methods, which highlight the input features that contribute most to a prediction.
@@ -108,7 +101,10 @@ Given an input image (top), [LIME](https://github.com/marcotcr/lime){:target='_b
 
 An ideal explanation should be *robust*: if a subset of features is genuinely explanatory for the prediction, then revealing additional features should not cause the prediction to change. 
 In our [previous blog post](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"}, we introduced the concept of **stability guarantees**, which aim to certify the robustness of explanations. However, existing methods suffer from two major limitations:
-<!-- [Eric] this is a hard notion, hard stability -->
+
+[Eric] this is a hard notion, hard stability
+
+
 - They rely on *specialized architectures*, in particular smoothed classifiers, which constrain their applicability.
 - Their guarantees are *overly conservative*, meaning they certify only small perturbations, limiting practical use.
 
@@ -123,17 +119,20 @@ We illustrate this concept as follows.
 
 {% include gallery id="gallery_algo" layout="" caption="When revealing up to $r=4$ features of a given explanation uniformly at random, the prediction remains unchanged 95.3% of the time." %}
 
-<!-- [Eric] This notion of stability ... (dont say our previous work)
+[Eric] This notion of stability ... (dont say our previous work)
 move this part up, just jump into soft stability in this section
- -->
+
 [Our previous work](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"} introduced **hard stability**, a property that ensures a prediction remains unchanged for perturbations up to a certain tolerance. 
 However, determining this tolerance is challenging: computing the maximum tolerance is computationally expensive, while a lower bound requires specialized architectures (smoothed classifiers). 
 Because it is difficult to provably guarantee to what point explanations remain hard stable, we propose an alternative approach.
 
 <!-- even then, the certifiable tolerance is often too small to be practical and lower than empirically observed limits. -->
 
-<!-- ### Soft stability: a more flexible alternative -->
 ## Soft stability: a more flexible and scalable guarantee
+
+{% include gallery id="gallery_lime_vs_shap_soft" layout="" caption="some caption" %}
+
+
 Instead of requiring that *all* perturbations do not flip the prediction, we propose a probabilistic approach that measures how often the prediction changes:
 
 <div class="notice--info">
@@ -151,15 +150,17 @@ The two key benefits are:
 2. **Practical guarantees**: The certificates for soft stability are much larger and more practically useful than those obtained from hard stability.
 
 
-<!-- [Eric] needs an example of two explanations, both not stable, but one is 90% stable and the other is 5% stable 
+[Eric] needs an example of two explanations, both not stable, but one is 90% stable and the other is 5% stable 
   and then use this example when we are explaining
--->
+
 
 In the next sections, we provide detailed comparisons between hard and soft stability and demonstrate the practical benefits of our new approach.
 
 
 ## Technical details
-<!-- [Eric] merge this part into the previous section, is too redundant currently -->
+[Eric] merge this part into the previous section, is too redundant currently
+
+
 The fundamental difference between hard and soft stability lies in how they define robustness:
 
 |  | Formal Mathematical Guarantees | Computational Requirements |
@@ -176,9 +177,9 @@ For an image of a penguin masked to show only the top 44% explanation by LIME, h
 
 For the remainder of this section, we will discuss the computational details for certifying hard stability and soft stability. 
 
-<!-- [Eric] two paragraphs only
+[Eric] two paragraphs only
 title: computational problems, why its hard
-next title paragraph: here is our algorithm to solve this -->
+next title paragraph: here is our algorithm to solve this
 
 ### Computational difficulties in certifying hard stability
 Certifying hard stability is challenging because determining the maximum tolerance---the largest perturbation radius at which the prediction remains unchanged---requires exhaustively checking all possible perturbations up to that radius to ensure none cause a prediction flip. 
@@ -220,17 +221,19 @@ with probability $\geq 1 - \delta$, we have that $\lvert \hat{\tau}_r - \tau_r \
 The technical details follow by standard concentration theorems on sampling. 
 We give a demonstration of the stability rate estimation algorithm in the following [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}. 
 
-<!-- add figure, breaks up text -->
+[Eric] add figure, breaks up text
 
-<!-- fix this -->
+fix this
+
 There are three main computational benefits of estimating soft stability in this manner.
 First, the estimation algorithm is model-agnostic, which means that soft stability can be certified for any model, not just smoothed ones --- in contrast to hard stability.
 Second, this algorithm is sample-efficient: the number of samples depends only on the hyperparameters $\varepsilon$ and $\delta$, meaning that the runtime cost scales linearly with the cost of running the classifier.
 
-<!-- [Eric] say this later -->
-<!-- Thirdly, as our subsequent experiments will show, soft stability certificates are much less conservative than hard stability, making them more practical for measuring the robustness of explanations. -->
+[Eric] say this later
 
-<!-- Next, we give some experimental evaluations that compare soft and hard stability in practice. -->
+Thirdly, as our subsequent experiments will show, soft stability certificates are much less conservative than hard stability, making them more practical for measuring the robustness of explanations.
+
+Next, we give some experimental evaluations that compare soft and hard stability in practice.
 
 
 
@@ -241,15 +244,15 @@ We empirically evaluate on vision and language tasks.
 
 Below, we show the stability rates we can attain on [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"}, when taking $1000$ examples from ImageNet.
 
-<!-- [Eric] make it more integrated instead of saying it all at the end, also condense
+[Eric] make it more integrated instead of saying it all at the end, also condense
 what we say
--->
 
-<!-- [Eric] 
+
+[Eric] 
 make these graphs html native 
 put data into json format
 can use claude
--->
+
 
 {% include gallery id="gallery_soft_certifies_more" layout="" caption="**Soft stability certifies more than hard stability.** LIME and SHAP showing a sizable advantage over IntGrad, MFABA, and random baselines across all radii." %}
 
@@ -269,7 +272,7 @@ Should we completely abandon smoothing?
 It turns out no, not necessarily.
 Although the algorithm for certifying does not require a smoothed classifier, we 
 
-<!-- [Eric] we can show empirically that theory stuff -->
+[Eric] we can show empirically that theory stuff
 <!-- found that mildly smoothed models often have empirically improved stability rates. -->
 
 <details>

@@ -73,20 +73,46 @@ gallery_smoothing_improves_stability:
 
 ---
 
-
-<script type="text/x-mathjax-config">
- MathJax.Hub.Config({
-   tex2jax: {
-     inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-     processEscapes: true
-   }
- });
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  }
+};
 </script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
 
 
-<script type="text/javascript" async
- src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
-</script>
+<style>
+    /* Basic styles for tabs */
+    .tab-container { display: flex; cursor: pointer; }
+    .tab { padding: 10px 20px; margin-right: 5px; background: #ddd; border-radius: 5px; }
+    .tab.active { background: #aaa; font-weight: bold; }
+    #plot-container { margin-top: 20px; }
+
+    .plot-row {
+        display: flex;
+        gap: 20px; /* Optional spacing between plots */
+    }
+
+    .plot-box {
+        flex: 1;                      /* Each plot takes 50% of row */
+        position: relative;
+        padding-bottom: 43%;         /* Aspect ratio: height = 43% of width */
+    }
+
+    .plot-inner {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+</style>
+
 
 > Stability guarantees are an emerging tool for understanding how reliable explanations are.
 > However, current methods rely on specialized architectures and give guarantees that are too conservative to be useful.
@@ -253,19 +279,6 @@ with probability at least $1 - \delta$, its estimation accuracy is $\lvert \hat{
 We also give a reference implementation in our [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}. 
 
 
-<!--
-The resulting estimated soft stability rate $\hat{\tau}_r$ is accurate to the true stability rate $\tau_r$ with high confidence.
-For example, for $\delta = 0.05$ and $\varepsilon = 0.1$, taking $N \geq 185$ samples allows the estimator $\hat{\tau}_r$ to fall within $0.1$ of the true $\tau_r$ at least $95$% of the time. 
-
-with probability $\geq 1 - \delta$, we have that $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$.
-The technical details follow by standard concentration theorems on sampling. 
-We give a demonstration of the stability rate estimation algorithm in the following [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}. 
-
-[Eric] add figure, breaks up text
-
-fix this
--->
-
 There are three main computational benefits of estimating soft stability in this manner.
 First, the estimation algorithm is model-agnostic, which means that soft stability can be certified for any model, not just smoothed ones --- in contrast to hard stability.
 Second, this algorithm is sample-efficient: the number of samples depends only on the hyperparameters $\varepsilon$ and $\delta$, meaning that the runtime cost scales linearly with the cost of running the classifier.
@@ -285,29 +298,79 @@ Next, we give some experimental evaluations that compare soft and hard stability
 We next consider how soft stability compares with hard stability in practice. 
 We empirically evaluate on vision and language tasks.
 
-We first show the stability rates attainble with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} mdoel over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images).
-
-[Eric] make it more integrated instead of saying it all at the end, also condense
-what we say
-make these graphs html native 
-put data into json format
-can use claude
+We first show the stability rates attainble with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images).
 
 
+
+<div class="plot-row">
+  <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
+  <div class="plot-box"><div id="vit_hard_stability" class="plot-inner"></div></div>
+</div>
+
+<script>
+  function plotFromJSON(jsonPath, divID, title) {
+    fetch(jsonPath)
+      .then(res => res.json())
+      .then(data => {
+        const radii = data.radii;
+        const methods = Object.keys(data).filter(k => k !== 'radii');
+
+        const traces = methods.map(method => ({
+          x: radii,
+          y: data[method],
+          type: 'scatter',
+          mode: 'lines+markers',
+          name: method,
+        }));
+
+        const layout = {
+          title: title,
+          margin: { t: 40, l: 40, r: 40, b: 40 },
+          xaxis: { title: 'Radius' },
+          yaxis: { title: 'Stability' }
+        };
+
+        Plotly.newPlot(divID, traces, layout, { responsive: true });
+      })
+      .catch(err => console.error(`Error loading ${jsonPath}:`, err));
+  }
+
+  // Plot both datasets
+  plotFromJSON('/assets/images/soft_stability/vit_soft_stability.json', 'vit_soft_stability', 'Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/vit_hard_stability.json', 'vit_hard_stability', 'Hard Stability');
+</script>
+
+
+<!--
 {% include gallery id="gallery_soft_certifies_more" layout="" caption="**Soft stability certifies more than hard stability.** LIME and SHAP showing a sizable advantage over IntGrad, MFABA, and random baselines across all radii." %}
+-->
 
 Impressively, the attainably radii at which soft stability are much larger than that of hard stability, by up to two orders of magnitude.
 Although this trend is most pertinent for vision, it is also present for language models.
 Next, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
 
-{% include gallery id="gallery_soft_certifies_more_tweeteval" layout="" caption="**Soft stability certifies more than hard stability.** " %}
 
+<div class="plot-row">
+  <div class="plot-box"><div id="roberta_soft_stability" class="plot-inner"></div></div>
+  <div class="plot-box"><div id="roberta_hard_stability" class="plot-inner"></div></div>
+</div>
+
+<script>
+  // Plot both datasets
+  plotFromJSON('/assets/images/soft_stability/roberta_soft_stability.json', 'roberta_soft_stability', 'Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/roberta_hard_stability.json', 'roberta_hard_stability', 'Hard Stability');
+</script>
+
+
+
+<!--
+{% include gallery id="gallery_soft_certifies_more_tweeteval" layout="" caption="**Soft stability certifies more than hard stability.** " %}
+-->
 
 A caveat of the soft stability estimation is that it is inherently probabilistic, which directly contrasts with the deterministic style of hard stability.
 To boost the estimation confidence, one can take more samples to better approximate the true soft stability rate.
 
 <!--
-We observe that the attainable radii from soft stability are much larger, by up to two orders of magnitude, than those obtained by hard stability.
 This trend is most pertinent in the vision task but is also present in the language task.
 Furtheremore, for the vision task, we can see that soft stability effectively differentiates various explanation methods, in contrast to hard stability.
 Note that a caveat of the soft stability estimation is that it is inherently probabilistic, which directly contrasts with the deterministic style of hard stability.
@@ -394,5 +457,3 @@ If you find our work helpful, please consider citing it!
  year={2025}
 }
 ```
-
-

@@ -25,7 +25,6 @@ authors:
  - Eric Wong
 
 
-
 gallery_hard_vs_soft:
  - url: /assets/images/soft_stability/hard_vs_soft_pipeline.png
    image_path: /assets/images/soft_stability/hard_vs_soft_pipeline.png
@@ -58,6 +57,7 @@ gallery_soft_certifies_more:
    image_path: /assets/images/soft_stability/vit_imagenet_hard.png
    title: Soft stability certifies more than hard stability (Hard).
 
+
 gallery_soft_certifies_more_tweeteval:
  - url: /assets/images/soft_stability/roberta_tweeteval_soft.png
    image_path: /assets/images/soft_stability/roberta_tweeteval_soft.png
@@ -65,6 +65,13 @@ gallery_soft_certifies_more_tweeteval:
  - url: /assets/images/soft_stability/roberta_tweeteval_hard.png
    image_path: /assets/images/soft_stability/roberta_tweeteval_hard.png
    title: Soft stability certifies more than hard stability (Hard).
+
+
+gallery_smoothing_wrapper:
+ - url: /assets/images/soft_stability/smoothing_wrapper.png
+   image_path: /assets/images/soft_stability/smoothing_wrapper.png
+   title: We should not be using this particular image because it is a screenshot.
+
 
 gallery_smoothing_improves_stability:
  - url: /assets/images/soft_stability/smoothing_improves_stability.png
@@ -336,8 +343,8 @@ We first show the stability rates attainble with a [Vision Transformer](https://
   }
 
   // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/vit_soft_stability.json', 'vit_soft_stability', 'Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/vit_hard_stability.json', 'vit_hard_stability', 'Hard Stability');
+  plotFromJSON('/assets/images/soft_stability/vit_soft_stability.json', 'vit_soft_stability', 'VIT Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/vit_hard_stability.json', 'vit_hard_stability', 'VIT Hard Stability');
 </script>
 
 
@@ -357,8 +364,8 @@ Next, we show the stability rates we can attain on [RoBERTa](https://huggingface
 
 <script>
   // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/roberta_soft_stability.json', 'roberta_soft_stability', 'Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/roberta_hard_stability.json', 'roberta_hard_stability', 'Hard Stability');
+  plotFromJSON('/assets/images/soft_stability/roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/roberta_hard_stability.json', 'roberta_hard_stability', 'RoBERTa Hard Stability');
 </script>
 
 
@@ -396,6 +403,9 @@ Moreover, we can explain these empirical observations using techniques from [Boo
 
 The particular smoothing implementation we consider involves randomly masking (i.e., dropping, zeroing) features, which we define as follows.
 
+{% include gallery id="gallery_smoothing_wrapper" layout="" caption="**Random masking of a classifier.** Randomly masked copies of the original input are given to a model and the outputs are averaged. Each feature is kept with probability $\lambda$, i.e., dropped with probability $1 - \lambda$. In this example, the task is to classify whether or not lung disease is present." %}
+
+
 **Definition. [Random Masking]**
 For an input $x \in \mathbb{R}^d$ and classifier $f: \mathbb{R}^d \to \mathbb{R}^m$, define the smoothed classifier as $\tilde{f}(x) = \mathbb{E}_{\tilde{x}} f(\tilde{x})$, where independently for each feature $x_i$, the smoothed feature is $\tilde{x}_i = x_i$ with probability $\lambda$, and $\tilde{x}_i = 0$ with probability $1 - \lambda$.
 {: .notice--info}
@@ -406,9 +416,91 @@ One can think of the smoothing parameter $\lambda$ as the probability that any g
 Smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing occurs because $\tilde{x} = x$ always; at $\lambda = 1/2$, half the features of $x$ are zeroed out on average; at $\lambda = 0$, the classifier predicts on an entirely zeroed input because $\tilde{x} = 0_d$.
 
 
-Importantly, we observe that smoothed classifiers can have improved soft stability!
+Importantly, we observe that smoothed classifiers can have improved soft stability, particularly for weaker models!
+Below, we show an example for ResNet18, where only 25% of the input is randomly shown.
 
+<div id="plot-container">
+  <div class="plot-row">
+    <div class="plot-box">
+      <div class="plot-inner" id="stability-vs-lambda"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Load the JSON data and create plot
+fetch('/assets/images/soft_stability/resnet_stability_vs_lambda.json')
+  .then(response => response.json())
+  .then(data => {
+    // Create traces for each lambda value
+    const traces = [
+        {
+            x: data.radii,
+            y: data.lambda_1_0,
+            name: 'λ = 1.0',
+            mode: 'lines+markers',
+            line: {width: 2},
+        },
+        {
+            x: data.radii,
+            y: data.lambda_0_8, 
+            name: 'λ = 0.8',
+            mode: 'lines+markers',
+            line: {width: 2},
+        },
+        {
+            x: data.radii,
+            y: data.lambda_0_6,
+            name: 'λ = 0.6', 
+            mode: 'lines+markers',
+            line: {width: 2},
+        }
+    ];
+
+    const layout = {
+        title: 'Stability Rates vs. Smoothing (ResNet18)',
+        xaxis: {
+            title: 'Radius',
+            showgrid: true,
+            zeroline: true
+        },
+        yaxis: {
+            title: 'Stability Rate', 
+            range: [0, 1],
+            showgrid: true,
+            zeroline: true
+        },
+        showlegend: true,
+        legend: {
+            x: 0.1, // Adjust x position (0 = left, 1 = right)
+            y: 0.1,  // Adjust y position (0 = bottom, 1 = top)
+            xanchor: 'left', // Anchor point on legend box
+            yanchor: 'bottom',  // Anchor point on legend box
+            bgcolor: 'rgba(255,255,255,0.8)', // Semi-transparent background
+            bordercolor: '#ccc',
+            borderwidth: 1
+        },
+        margin: {
+            l: 40,
+            r: 40, 
+            b: 40,
+            t: 40,
+            pad: 4
+        }
+    };
+
+    Plotly.newPlot('stability-vs-lambda', traces, layout, {responsive: true});
+})
+.catch(error => {
+    console.error('Error loading the JSON file:', error);
+});
+</script>
+
+
+
+<!--
 {% include gallery id="gallery_smoothing_improves_stability" layout="" caption="**[Anton] this image is a screenshot.**" %}
+-->
 
 To study the relation between smoothing and stability rate, we use tools from [Boolean function analysis](https://en.wikipedia.org/wiki/Analysis_of_Boolean_functions){:target="_blank"}.
 Our main theoretical finding is as follows.

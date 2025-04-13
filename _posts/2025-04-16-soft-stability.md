@@ -183,17 +183,6 @@ In contast, the stability rate --- the key metric of soft stability --- offers a
 
 
 
-<!--
-[Eric] This notion of stability ... (dont say our previous work)
-move this part up, just jump into soft stability in this section
-
-[Our previous work](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"} introduced **hard stability**, a property that ensures a prediction remains unchanged for perturbations up to a certain tolerance. 
-However, determining this tolerance is challenging: computing the maximum tolerance is computationally expensive, while a lower bound requires specialized architectures (smoothed classifiers). 
-Because it is difficult to provably guarantee to what point explanations remain hard stable, we propose an alternative approach.
--->
-
-<!-- even then, the certifiable tolerance is often too small to be practical and lower than empirically observed limits. -->
-
 ## Soft stability: a more flexible and scalable guarantee
 
 
@@ -207,7 +196,6 @@ An explanation is <strong> hard stable </strong> at radius $r$ if including up t
 </div>
 
 We use "radius" to refer to the perturbation size, i.e., the number of features added, following robustness conventions.
-<!-- To further clarify naming conventions, this is was also known as [incemental stability](https://debugml.github.io/multiplicative-smoothing/#lipschitz-smoothness-for-incremental-stability). -->
 This radius is also used as part of soft stability's definition.
 But rather than measuring whether the prediction is *always* preserved, soft stability instead measures *how often* it is preserved.
 
@@ -221,10 +209,6 @@ At radius $r$, an explanation's <strong> stability rate </strong> $\tau_r$ is th
 The stability rate provides a fine-grained measure of an explanation's robustness.
 For example, two explanations may appear similar, but could in fact have very different robustness values.
 
-
-<!--
-{% include gallery id="gallery_lime_vs_shap_soft" layout="" caption="**Soft stability is a fine-grained measure of explanation robustness.**" %}
--->
 
 
 <figure style="display:flex; margin:auto; gap:20px;">
@@ -247,7 +231,7 @@ For example, two explanations may appear similar, but could in fact have very di
 
   <div style="flex:1; text-align:center;">
     SHAP
-    <img src="/assets/images/soft_stability/turtle_lime_pertb.png"/>
+    <img src="/assets/images/soft_stability/cat_shap.png"/>
     <!-- <br> -->
     <span style="color: #2ca02c">$\tau_2 = 0.76$ ✓</span>
     <!--
@@ -265,21 +249,11 @@ For example, two explanations may appear similar, but could in fact have very di
 
 
 
-
-
 By shifting to a probabilistic perspective, soft stability offers a more refined view of explanation robustness.
 Two key benefits follow:
 1. **Model-agnostic certification**: The soft stability rate is efficiently computable for any classifier, whereas hard stability is only easy to certify for smoothed classifers.
 2. **Practical guarantees**: The certificates for soft stability are much larger and more practically useful than those obtained from hard stability.
 
-<!--
-In the above 'Walker hound' example, the stability rate at radius $r = 4$ is $\tau_4 = 95.3$%.
-Note that soft stability is a generalization of hard stability, which can only give a yes/no statement about robustness---in this case, the explanation is *not* hard stable at radius $r = 4$ because $\tau_4 < 100$%.
-By simply shifting to a probabilistic perspective, soft stability offers a more refined view of explanation robustness.
-The two key benefits are:
-1. **Model-agnostic certification**: The soft stability rate is efficiently computable for any classifier, whereas hard stability is only easy to certify for smoothed classifers.
-2. **Practical guarantees**: The certificates for soft stability are much larger and more practically useful than those obtained from hard stability.
--->
 
 ### Certifying soft stability: challenges and algorithms
 At first, certifying soft stability (computing the stability rate) appears daunting.
@@ -287,49 +261,6 @@ If there are $m$ possible features that may be included at radius $r$, then ther
 In fact, this combinatorial explosion is the same computational bottleneck encountered when one tries to naively certify hard stability.
 
 
-
-<!--
-## Technical details
-[Eric] merge this part into the previous section, is too redundant currently
-
-
-The fundamental difference between hard and soft stability lies in how they define robustness:
-
-|  | Formal Mathematical Guarantees | Computational Requirements |
-|----------------|-----------|----------------------------|
-| **Hard Stability** | *All* perturbations up to $r$ features leave the prediction unchanged. | Expensive to certify; requires smoothed classifiers. |
-| **Soft Stability** | The prediction remains unchanged *with high probability*. | Efficient, sample-based estimation. |
-
-Both hard stability and soft stability describe how predictions change as features are revealed. 
-Hard stability ensures that revealing up to $r$ features *always* preserves the prediction, while soft stability measures how often this holds. 
-Hard stability is a stricter condition, guaranteeing invariance for all perturbations within $r$, whereas soft stability allows for occasional changes.
-When the stability rate reaches 100%, soft stability becomes equivalent to hard stability. This is further illustrated in the figure below.
-
-
-For the remainder of this section, we will discuss the computational details for certifying hard stability and soft stability. 
--->
-
-<!--
-[Eric] two paragraphs only
-title: computational problems, why its hard
-next title paragraph: here is our algorithm to solve this
--->
-
-<!--
-### Computational difficulties in certifying hard stability
-Certifying hard stability is challenging because determining the maximum tolerance---the largest perturbation radius at which the prediction remains unchanged---requires exhaustively checking all possible perturbations up to that radius to ensure none cause a prediction flip. 
-When a classifier lacks mathematically convenient properties, this process becomes computationally intractable, especially in high-dimensional spaces where the number of possible perturbations grows rapidly. 
-For instance, if there are $m$ possible features that can be included, the total number of cases to check up to radius $r \leq m$ is given by $\binom{m}{1} + \binom{m}{2} + \cdots + \binom{m}{r}$, leading to a combinatorial explosion of $\mathcal{O}(m^r)$ complexity that makes brute-force verification impractical for real-world models.
-
-To address this challenge, prior work relies on [smoothing classifiers](#mild-smoothing-improves-soft-stability),
-to attain mathematical properties more amenable for hard stability certification.
-Specifically, computing a lower bound on the maximum tolerance becomes more tractable with a smoothed classifier.
-However, smoothed classifiers come with significant drawbacks. 
-First, the resulting stability guarantees only apply to the smoothed classifier rather than the original one.
-Second, because smoothing often degrades accuracy, the guarantees are with respect to an (often) worse model.
-Third, the bounds tend to be too conservative, certifying much smaller perturbation radii than what empirical sampling suggests is achievable ([Xue et al. 2024, Section 4.1](https://arxiv.org/abs/2307.05902){:target="_blank"}).
-This discrepancy limits the practical utility of smoothed classifiers for stability certification.
--->
 
 Fortunately, we can efficiently **estimate** the stability rate to a high accuracy using standard sampling techniques from statistics.
 This procedure is summarized in the following figure.
@@ -364,13 +295,6 @@ First, the estimation algorithm is model-agnostic, which means that soft stabili
 Second, this algorithm is sample-efficient: the number of samples depends only on the hyperparameters $\varepsilon$ and $\delta$, meaning that the runtime cost scales linearly with the cost of running the classifier.
 Thirdly, as we show next, soft stability certificates are much less conservative than hard stability, making them more practical for giving fine-grained and meaningful measures of explanation robustness.
 
-<!--
-[Eric] say this later
-
-Thirdly, as our subsequent experiments will show, soft stability certificates are much less conservative than hard stability, making them more practical for measuring the robustness of explanations.
-Next, we give some experimental evaluations that compare soft and hard stability in practice.
--->
-
 
 
 ## Experiments
@@ -378,7 +302,9 @@ Next, we give some experimental evaluations that compare soft and hard stability
 We next consider how soft stability compares with hard stability in practice. 
 We empirically evaluate on vision and language tasks.
 
-We first show the stability rates attainble with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images).
+
+We first show the stability rates attainble with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) using different explanation methods.
+For each method, we select the top-25% ranked features as the explanation.
 
 
 
@@ -399,15 +325,15 @@ We first show the stability rates attainble with a [Vision Transformer](https://
           x: radii,
           y: data[method],
           type: 'scatter',
-          mode: 'lines+markers',
+          mode: 'lines',
           name: method,
         }));
 
         const layout = {
           title: title,
           margin: { t: 40, l: 40, r: 40, b: 40 },
-          xaxis: { title: 'Radius' },
-          yaxis: { title: 'Stability' }
+          xaxis: { title: 'Perturbation Radius' },
+          yaxis: { title: 'Stability Rate' }
         };
 
         Plotly.newPlot(divID, traces, layout, { responsive: true });
@@ -416,17 +342,14 @@ We first show the stability rates attainble with a [Vision Transformer](https://
   }
 
   // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/vit_soft_stability.json', 'vit_soft_stability', 'VIT Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/vit_hard_stability.json', 'vit_hard_stability', 'VIT Hard Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'VIT Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'VIT Hard Stability');
 </script>
 
 
-<!--
-{% include gallery id="gallery_soft_certifies_more" layout="" caption="**Soft stability certifies more than hard stability.** LIME and SHAP showing a sizable advantage over IntGrad, MFABA, and random baselines across all radii." %}
--->
+While the hard stability guarantees quickly become vacuous at even small radii, the soft stability guarantees continue to yield meaningful guarantees.
 
-Impressively, the attainably radii at which soft stability are much larger than that of hard stability, by up to two orders of magnitude.
-Although this trend is most pertinent for vision, it is also present for language models.
+Although our work primmarily focuses on vision models, soft stability is also computable for language models.
 Next, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
 
 
@@ -437,23 +360,14 @@ Next, we show the stability rates we can attain on [RoBERTa](https://huggingface
 
 <script>
   // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/roberta_hard_stability.json', 'roberta_hard_stability', 'RoBERTa Hard Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_roberta_hard_stability.json', 'roberta_hard_stability', 'RoBERTa Hard Stability');
 </script>
 
 
 
 <!--
-{% include gallery id="gallery_soft_certifies_more_tweeteval" layout="" caption="**Soft stability certifies more than hard stability.** " %}
--->
-
 A caveat of the soft stability estimation is that it is inherently probabilistic, which directly contrasts with the deterministic style of hard stability.
-To boost the estimation confidence, one can take more samples to better approximate the true soft stability rate.
-
-<!--
-This trend is most pertinent in the vision task but is also present in the language task.
-Furtheremore, for the vision task, we can see that soft stability effectively differentiates various explanation methods, in contrast to hard stability.
-Note that a caveat of the soft stability estimation is that it is inherently probabilistic, which directly contrasts with the deterministic style of hard stability.
 To boost the estimation confidence, one can take more samples to better approximate the true soft stability rate.
 -->
 
@@ -464,10 +378,6 @@ Not necessarily!
 Although the algorithm for certifying does not require a smoothed classifier, we empirically found that mildly smoothed models often have empirically improved stability rates.
 Moreover, we can explain these empirical observations using techniques from [Boolean function analysis](https://en.wikipedia.org/wiki/Analysis_of_Boolean_functions).
 
-<!--
-[Eric] we can show empirically that theory stuff
--->
-<!-- found that mildly smoothed models often have empirically improved stability rates. -->
 
 <details>
 <summary>Click for details</summary>
@@ -481,7 +391,7 @@ The particular smoothing implementation we consider involves randomly masking (i
 
 **Definition. [Random Masking]**
 For an input $x \in \mathbb{R}^d$ and classifier $f: \mathbb{R}^d \to \mathbb{R}^m$, define the smoothed classifier as $\tilde{f}(x) = \mathbb{E}_{\tilde{x}} f(\tilde{x})$, where independently for each feature $x_i$, the smoothed feature is $\tilde{x}_i = x_i$ with probability $\lambda$, and $\tilde{x}_i = 0$ with probability $1 - \lambda$.
-**Smaller $\lambda$ means stronger smoothing.**
+That is, **a smaller $\lambda$ means stronger smoothing.**
 {: .notice--info}
 
 
@@ -491,50 +401,77 @@ Smoothing becomes stronger as $\lambda$ shrinks: at $\lambda = 1$, no smoothing 
 
 
 Importantly, we observe that smoothed classifiers can have improved soft stability, particularly for weaker models!
-Below, we show an example for ResNet18, where only 25% of the input is randomly shown.
+Below, we show examples for ViT and ResNet50.
 
 <div id="plot-container">
   <div class="plot-row">
     <div class="plot-box">
-      <div class="plot-inner" id="stability-vs-lambda"></div>
+      <div class="plot-inner" id="vit-stability-vs-lambda"></div>
+    </div>
+    <div class="plot-box">
+      <div class="plot-inner" id="resnet50-stability-vs-lambda"></div>
     </div>
   </div>
 </div>
 
 <script>
-// Load the JSON data and create plot
-fetch('/assets/images/soft_stability/resnet_stability_vs_lambda.json')
-  .then(response => response.json())
-  .then(data => {
-    // Create traces for each lambda value
+// Function to create plot
+function createPlot(elementId, data, title) {
     const traces = [
         {
             x: data.radii,
-            y: data.lambda_1_0,
+            y: data["lambda_1.0"],
             name: 'λ = 1.0',
-            mode: 'lines+markers',
+            mode: 'lines',
             line: {width: 2},
+            hoverinfo: 'x+y+name'
         },
         {
             x: data.radii,
-            y: data.lambda_0_8, 
-            name: 'λ = 0.8',
-            mode: 'lines+markers',
+            y: data["lambda_0.9"],
+            name: 'λ = 0.9',
+            mode: 'lines',
             line: {width: 2},
+            hoverinfo: 'x+y+name'
         },
         {
             x: data.radii,
-            y: data.lambda_0_6,
+            y: data["lambda_0.8"],
+            name: 'λ = 0.8', 
+            mode: 'lines',
+            line: {width: 2},
+            hoverinfo: 'x+y+name'
+        },
+        {
+            x: data.radii,
+            y: data["lambda_0.7"],
+            name: 'λ = 0.7', 
+            mode: 'lines',
+            line: {width: 2},
+            hoverinfo: 'x+y+name'
+        },
+        {
+            x: data.radii,
+            y: data["lambda_0.6"],
             name: 'λ = 0.6', 
-            mode: 'lines+markers',
+            mode: 'lines',
             line: {width: 2},
+            hoverinfo: 'x+y+name'
+        },
+        {
+            x: data.radii,
+            y: data["lambda_0.5"],
+            name: 'λ = 0.5', 
+            mode: 'lines',
+            line: {width: 2},
+            hoverinfo: 'x+y+name'
         }
     ];
 
     const layout = {
-        title: 'Stability Rates vs. Smoothing (ResNet18)',
+        title: title,
         xaxis: {
-            title: 'Radius',
+            title: 'Perturbation Radius',
             showgrid: true,
             zeroline: true
         },
@@ -546,11 +483,11 @@ fetch('/assets/images/soft_stability/resnet_stability_vs_lambda.json')
         },
         showlegend: true,
         legend: {
-            x: 0.1, // Adjust x position (0 = left, 1 = right)
-            y: 0.1,  // Adjust y position (0 = bottom, 1 = top)
-            xanchor: 'left', // Anchor point on legend box
-            yanchor: 'bottom',  // Anchor point on legend box
-            bgcolor: 'rgba(255,255,255,0.8)', // Semi-transparent background
+            x: 0.1,
+            y: 0.1,
+            xanchor: 'left',
+            yanchor: 'bottom',
+            bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#ccc',
             borderwidth: 1
         },
@@ -560,26 +497,39 @@ fetch('/assets/images/soft_stability/resnet_stability_vs_lambda.json')
             b: 40,
             t: 40,
             pad: 4
-        }
+        },
+        hovermode: 'x unified'
     };
 
-    Plotly.newPlot('stability-vs-lambda', traces, layout, {responsive: true});
-})
-.catch(error => {
-    console.error('Error loading the JSON file:', error);
-});
+    Plotly.newPlot(elementId, traces, layout, {responsive: true});
+}
+
+// Load and plot ViT data
+fetch('/assets/images/soft_stability/blog_vit_stability_vs_lambda.json')
+    .then(response => response.json())
+    .then(data => {
+        createPlot('vit-stability-vs-lambda', data, 'ViT Stability vs. Smoothing');
+    })
+    .catch(error => {
+        console.error('Error loading ViT JSON file:', error);
+    });
+
+// Load and plot ResNet50 data
+fetch('/assets/images/soft_stability/blog_resnet50_stability_vs_lambda.json')
+    .then(response => response.json())
+    .then(data => {
+        createPlot('resnet50-stability-vs-lambda', data, 'ResNet50 Stability vs. Smoothing');
+    })
+    .catch(error => {
+        console.error('Error loading ResNet50 JSON file:', error);
+    });
 </script>
 
-
-
-<!--
-{% include gallery id="gallery_smoothing_improves_stability" layout="" caption="**[Anton] this image is a screenshot.**" %}
--->
 
 To study the relation between smoothing and stability rate, we use tools from [Boolean function analysis](https://en.wikipedia.org/wiki/Analysis_of_Boolean_functions){:target="_blank"}.
 Our main theoretical finding is as follows.
 
-**Main Result.**  Smoothing improves the worst-case stability rate by a factor of $\lambda$.
+**Main Result.**  Smoothing improves the lower bound on the stability rate by shrinking its gap to 1 by a factor of $\lambda$.
 {: .notice--success}
 
 
@@ -589,13 +539,10 @@ In more detail, for any fixed input-explanation pair, the stability rate of any 
 
 
 $$
-1 - \mathcal{Q} \leq \tau_r (f) \,\, \implies\,\, 1 - \lambda \mathcal{Q} \leq \tau_r (\tilde{f}),
+1 - Q \leq \tau_r (f) \,\, \implies\,\, 1 - \lambda Q \leq \tau_r (\tilde{f}),
 $$
 
-where $\mathcal{Q}$ is a quantity that depends on $f$ (specifically, its Boolean Fourier spectrum).
-
-<!-- 
- and the stability rates are computed with respect to $x$ and $\alpha$. -->
+where $Q$ is a quantity that depends on $f$ (specifically, its Boolean Fourier spectrum) and the distance to the decision boundary.
 
 
 Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.

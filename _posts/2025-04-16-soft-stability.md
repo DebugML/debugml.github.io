@@ -342,8 +342,8 @@ For each method, we select the top-25% ranked features as the explanation.
   }
 
   // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'VIT Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'VIT Hard Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
+  plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
 </script>
 
 
@@ -542,7 +542,7 @@ $$
 1 - Q \leq \tau_r (f) \,\, \implies\,\, 1 - \lambda Q \leq \tau_r (\tilde{f}),
 $$
 
-where $Q$ is a quantity that depends on $f$ (specifically, its Boolean Fourier spectrum) and the distance to the decision boundary.
+where $Q$ is a quantity that depends on $f$ (specifically, its Boolean spectrum) and the distance to the decision boundary.
 
 
 Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.

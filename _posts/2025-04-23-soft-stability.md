@@ -10,7 +10,7 @@ header:
  teaser: /assets/images/soft_stability/stability_rocks.png
  actions:
    - label: "Paper"
-     url:
+     url: https://arxiv.org/abs/2504.13787
    - label: "Code"
      url: https://github.com/helenjin/soft_stability/
    - label: "Tutorial"
@@ -123,8 +123,8 @@ MathJax = {
 
 > Stability guarantees are an emerging tool for understanding how reliable explanations are.
 > However, current methods rely on specialized architectures and give guarantees that are too conservative to be useful.
-> To address these limitations, we introduce **soft stability**, a more general and flexible approach for certifying explanations that works with any model and gives more useful guarantees. 
-> Our guarantees are orders of magnitude greater than existitng methods and can scale to be usable in practice in high-dimensional settings.
+> To address these limitations, we introduce **soft stability** and propose a simple, sample-efficient **stability certification algorithm (SCA)** that can flexibly work with any model and give more useful guarantees. 
+> Our guarantees are orders of magnitude greater than existing methods and can scale to be usable in practice in high-dimensional settings.
 
 
 Powerful machine learning models are increasingly deployed in real-world applications. 
@@ -133,28 +133,24 @@ A common approach to explaining these models is through feature attributions met
 However, these explanations that are the selected features are often brittle, as shown in the following figure.
 
 
-<!--
-{% include gallery id="gallery_unstable" layout="" caption="**(Anton: THIS IMAGE WILL BE REPLACED) An unstable selection of features from LIME.**\\
-Given an input image (top), [LIME](https://github.com/marcotcr/lime){:target='_blank'} selects features it deems important for the classifier $f$'s prediction (middle). However, adding just four additional features causes the prediction to change from 'Walker hound' to 'Beagle' (bottom). This suggests that the explanation is highly sensitive to the inclusion of additional features, making it unreliable."%}
--->
 
 <figure style="display:flex; margin:auto; gap:20px;">
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     Original Image
     <img src="/assets/images/soft_stability/turtle_original.png"/>
     <br> Sea Turtle
   </div>
 
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     Explanation
     <img src="/assets/images/soft_stability/turtle_lime.png"/>
     <br> <span style="color: #2ca02c">Sea Turtle ✓</span>
   </div>
 
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     + 3 Features
     <img src="/assets/images/soft_stability/turtle_lime_pertb.png"/>
-    <br> <span style="color: #d62728">Corral Reef ✗</span>
+    <br> <span style="color: #d62728">Coral Reef ✗</span>
   </div>
 </figure>
 
@@ -168,22 +164,24 @@ Given an input image (top), [LIME](https://github.com/marcotcr/lime){:target='_b
 
 
 An ideal explanation should be *robust*: if a subset of features is genuinely explanatory for the prediction, then revealing any small set of additional features should not change the prediction, up to some tolerance threshold.
-In fact, this is the notion of **hard stability**, which we explored in a [previous blog post](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"}.
-However, exactly computing this maximum hard stability tolerance is computationally challenging, while the lower-bound estimation algorithms that we developed suffer from two major drawbacks:
+This is the notion of **hard stability**, which was explored in a [previous blog post](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"}.
 
-- They rely on *specialized architectures*, in particular smoothed classifiers, which constrain their applicability.
-- Their guarantees are *overly conservative*, meaning they certify only small perturbations, limiting practical use.
+As it turns out, finding this tolerance exactly is non-trivial and computationally intractable. 
+A first approach was the [MuS algorithmic framework](https://debugml.github.io/multiplicative-smoothing/){:target="_blank"}, which multiplicatively smooths models to have nice mathematically properties that enable efficiently lower-bounding the maximum tolerance. 
+However, there are still significant drawbacks:
+- Reliance on *specialized architectures*, in particular smoothed classifiers, constrain their applicability.
+- The resulting guarantees are *overly conservative*, meaning they certify only small perturbations, limiting practical use.
 
-In this work, we introduce **soft stability**, a novel approach to robustness that overcomes these limitations.
-The core idea behind stability is to measure how an explanation's prediction changes as more features are revealed.
-We illustrate this concept as follows.
-
-{% include gallery id="gallery_hard_vs_soft" layout="" caption="**Soft stability provides a fine-grained measure of robustness.** LIME's explanation is only hard stable at radius $r \leq 2$.
-In contast, the stability rate --- the key metric of soft stability --- offers a more nuanced view of sensitivity to added features." %}
+In this work, we address these limitations and introduce **soft stability**, a new form of stability with mathematical and algorithmic benefits that outweigh those of hard stability. We also introduce the **Stability Certification Algorithm (SCA)**, a simpler model-agnostic, sampling-based approach for certifying both hard and soft stabilities with rigorous statistical guarantees. 
 
 
 
 ## Soft stability: a more flexible and scalable guarantee
+
+In the figure below, we give a high-level overview of the core idea behind stability (both hard and soft variants). That is, stability measures how an explanation's prediction changes as more features are revealed.
+
+{% include gallery id="gallery_hard_vs_soft" layout="" caption="**Soft stability provides a fine-grained measure of robustness.** LIME's explanation is only hard stable at radius $r \leq 2$.
+In contast, the stability rate --- the key metric of soft stability --- offers a more nuanced view of sensitivity to added features." %}
 
 
 Although both hard stability and soft stability describe how predictions change as features are revealed, the fundamental difference lies in how they measure robustness.
@@ -207,36 +205,24 @@ At radius $r$, an explanation's <strong> stability rate </strong> $\tau_r$ is th
 
 
 The stability rate provides a fine-grained measure of an explanation's robustness.
-For example, two explanations may appear similar, but could in fact have very different robustness values.
-
+For example, two explanations may appear similar, but could in fact have very different levels of robustness.
 
 
 <figure style="display:flex; margin:auto; gap:20px;">
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     Original
     <img src="/assets/images/soft_stability/cat_original.png"/>
-    <!-- <br> -->
   </div>
-
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     LIME
     <img src="/assets/images/soft_stability/cat_lime.png"/>
-    <!-- <br> -->
-    <!-- <span style="color: #d62728">$\tau_2 = 0.37$ ✗</span> -->
-    $\tau_2 = 0.37$
-    <!--
-    <br> <span style="color: #2ca02c">Sea Turtle ✓</span>
-    -->
+    <span style="color: #d62728">$\tau_2 = 0.37$ ✗</span>
   </div>
 
-  <div style="flex:1; text-align:center;">
+  <div style="flex:0.8; text-align:center;">
     SHAP
     <img src="/assets/images/soft_stability/cat_shap.png"/>
-    <!-- <br> -->
     <span style="color: #2ca02c">$\tau_2 = 0.76$ ✓</span>
-    <!--
-    <br> <span style="color: #d62728">Corral Reef ✗</span>
-    -->
   </div>
 </figure>
 
@@ -245,7 +231,6 @@ For example, two explanations may appear similar, but could in fact have very di
   Despite visual similarities, the explanations generated by LIME (middle) and SHAP (right) have different stability rates at radius $r = 2$.
   In this example, SHAP's explanation is considerably more stable than LIME's.
 </figcaption>
-
 
 
 
@@ -266,13 +251,13 @@ Fortunately, we can efficiently **estimate** the stability rate to a high accura
 This procedure is summarized in the following figure.
 
 
-{% include gallery id="gallery_algo" layout="" caption="**Estimating the stability rate $\tau_r$.** An estimator $\hat{\tau}_r$ constructed using $N \geq \log(2/\delta) / (2 \varepsilon^2)$ perturbation samples will, with probability at least $1 - \delta$, attain an accuracy of $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$. We give a reference implementation in our [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target='_blank'}. In this example, $\hat{\tau}_r = 0.953$." %}
+{% include gallery id="gallery_algo" layout="" caption="**Certifying Stability with SCA.** An estimator $\hat{\tau}_r$ constructed using $N \geq \log(2/\delta) / (2 \varepsilon^2)$ perturbation samples will, with probability at least $1 - \delta$, attain an accuracy of $\lvert \hat{\tau}_r - \tau_r \rvert \leq \varepsilon$. We give a reference implementation in our [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target='_blank'}. In this example, $\hat{\tau}_r = 0.953$." %}
 
 
 We outline this estimation process in more detail below.
 
 <div class="notice--success">
-<strong>Algorithm for estimating the stability rate $\tau_r$.</strong> <br>
+<strong>Stability Certification Algorithm (SCA) for estimating the stability rate $\tau_r$.</strong> <br>
 
 We can compute an estimator $\hat{\tau}_r$ in the following manner: <br>
 
@@ -290,28 +275,26 @@ with probability at least $1 - \delta$, its estimation accuracy is $\lvert \hat{
 We also give a reference implementation in our [tutorial notebook](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}. 
 
 
-There are three main computational benefits of estimating soft stability in this manner.
-First, the estimation algorithm is model-agnostic, which means that soft stability can be certified for any model, not just smoothed ones --- in contrast to hard stability.
-Second, this algorithm is sample-efficient: the number of samples depends only on the hyperparameters $\varepsilon$ and $\delta$, meaning that the runtime cost scales linearly with the cost of running the classifier.
-Thirdly, as we show next, soft stability certificates are much less conservative than hard stability, making them more practical for giving fine-grained and meaningful measures of explanation robustness.
+There are three main benefits of estimating stability in this manner.
+First, SCA is *model-agnostic*, which means that soft stability can be certified for any model, not just smoothed ones --- in contrast to hard stability.
+Second, SCA is *sample-efficient*: the number of samples depends only on the hyperparameters $\varepsilon$ and $\delta$, meaning that the runtime cost scales linearly with the cost of running the classifier.
+Thirdly, as we show next, soft stability certificates from SCA are much **less conservative** than those obtained from MuS, making them more practical for giving fine-grained and meaningful measures of explanation robustness.
 
 
 
 ## Experiments
 
-We next consider how soft stability compares with hard stability in practice. 
-We empirically evaluate on vision and language tasks.
+We next evaluate the advantages of stability certification algorithm (SCA) over MuS, the only other existing certification method for feature attributions.
+We also study how stability guarantees vary across vision and language tasks, as well as across different explanation methods.
 
+We first show that soft stability certificates obtained through SCA are stronger than those obtained from MuS, which quickly becomes vacuous as the perturbation size grows. The graphs below are for [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) and [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}, and explanation method [LIME](https://github.com/marcotcr/lime), where we select the top-25% ranked features as the explanation.
 
-We first show the stability rates attainble with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) using different explanation methods.
-For each method, we select the top-25% ranked features as the explanation.
+[add updated graphs]
 
-
-
-<div class="plot-row">
+<!-- <div class="plot-row">
   <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
   <div class="plot-box"><div id="vit_hard_stability" class="plot-inner"></div></div>
-</div>
+</div> -->
 
 <script>
   function plotFromJSON(jsonPath, divID, title) {
@@ -341,35 +324,33 @@ For each method, we select the top-25% ranked features as the explanation.
       .catch(err => console.error(`Error loading ${jsonPath}:`, err));
   }
 
-  // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
+  // // Plot both datasets
+  // plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
+  // plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
 </script>
 
 
-While the hard stability guarantees quickly become vacuous at even small radii, the soft stability guarantees continue to yield meaningful guarantees.
 
-Although our work primmarily focuses on vision models, soft stability is also computable for language models.
-Next, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
+We also show the stability rates attainable with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) using different explanation methods.
+For each method, we select the top-25% ranked features as the explanation.
+On the right, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
 
+[add updated graphs]
 
 <div class="plot-row">
+  <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
   <div class="plot-box"><div id="roberta_soft_stability" class="plot-inner"></div></div>
-  <div class="plot-box"><div id="roberta_hard_stability" class="plot-inner"></div></div>
 </div>
 
 <script>
   // Plot both datasets
+  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
   plotFromJSON('/assets/images/soft_stability/blog_roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/blog_roberta_hard_stability.json', 'roberta_hard_stability', 'RoBERTa Hard Stability');
 </script>
 
+<br>
 
-
-<!--
-A caveat of the soft stability estimation is that it is inherently probabilistic, which directly contrasts with the deterministic style of hard stability.
-To boost the estimation confidence, one can take more samples to better approximate the true soft stability rate.
--->
+For more details on other models and experiments, please refer to our [paper](https://arxiv.org/abs/2504.13787).
 
 
 ## Mild smoothing improves soft stability
@@ -547,7 +528,7 @@ where $Q$ is a quantity that depends on $f$ (specifically, its Boolean spectrum)
 
 Although this result is on a lower bound, it aligns with our empirical observation that smoothed classifiers tend to be more stable.
 Interestingly, we found it challenging to bound this improvement using [standard techniques](https://arxiv.org/abs/2105.10386){:target="_blank"}.
-This motivated us to develop novel theoretical tooling, which we leave the details and experiments for in the [paper](){:target="_blank"}.
+This motivated us to develop novel theoretical tooling, which we leave the details and experiments for in the [paper](https://arxiv.org/abs/2504.13787){:target="_blank"}.
 
 </div>
 </details>
@@ -556,17 +537,18 @@ This motivated us to develop novel theoretical tooling, which we leave the detai
 ## Conclusion
 In this blog post, we explore a practical variant of stability guarantees that improves upon existing methods in the literature.
 
-For more details, please check out our [paper](){:target="_blank"}, [code](https://github.com/helenjin/soft_stability/){:target="_blank"}, and [tutorial](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}.
+For more details, please check out our [paper](https://arxiv.org/abs/2504.13787){:target="_blank"}, [code](https://github.com/helenjin/soft_stability/){:target="_blank"}, and [tutorial](https://github.com/helenjin/soft_stability/blob/main/tutorial.ipynb){:target="_blank"}.
 
 
 Thank you for reading!
-If you find our work helpful, please consider citing it!
+Please cite if you find our work helpful.
 
 ```bibtex
 @article{jin2025softstability,
  title={Probabilistic Stability Guarantees for Feature Attributions},
  author={Jin, Helen and Xue, Anton and You, Weiqiu and Goel, Surbhi and Wong, Eric},
- journal={arXiv},
- year={2025}
+ journal={arXiv preprint arXiv:2504.13787},
+ year={2025},
+ url={https://arxiv.org/abs/2504.13787}
 }
 ```

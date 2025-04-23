@@ -310,14 +310,41 @@ We first show that soft stability certificates obtained through SCA are stronger
           type: 'scatter',
           mode: 'lines',
           name: method,
+          hoverinfo: "x+y+name"
         }));
 
         const layout = {
-          title: title,
-          margin: { t: 40, l: 40, r: 40, b: 40 },
-          xaxis: { title: 'Perturbation Radius' },
-          yaxis: { title: 'Stability Rate' }
+            title: title,
+            xaxis: {
+                title: 'Perturbation Radius',
+                showgrid: true,
+                zeroline: true
+            },
+            yaxis: {
+                title: 'Stability Rate', 
+                showgrid: true,
+                zeroline: true
+            },
+            showlegend: true,
+            legend: {
+                x: 0.1,
+                y: 0.1,
+                xanchor: 'left',
+                yanchor: 'bottom',
+                bgcolor: 'rgba(255,255,255,0.8)',
+                bordercolor: '#ccc',
+                borderwidth: 1
+            },
+            margin: {
+                l: 40,
+                r: 40, 
+                b: 40,
+                t: 40,
+                pad: 4
+            },
+            hovermode: 'x unified'
         };
+
 
         Plotly.newPlot(divID, traces, layout, { responsive: true });
       })

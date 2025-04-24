@@ -289,15 +289,123 @@ We also study how stability guarantees vary across vision and language tasks, as
 
 We first show that soft stability certificates obtained through SCA are stronger than those obtained from MuS, which quickly becomes vacuous as the perturbation size grows. The graphs below are for [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) and [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}, and explanation method [LIME](https://github.com/marcotcr/lime), where we select the top-25% ranked features as the explanation.
 
-[add updated graphs]
 
-<!-- <div class="plot-row">
-  <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
-  <div class="plot-box"><div id="vit_hard_stability" class="plot-inner"></div></div>
-</div> -->
+<div class="plot-row">
+  <div class="plot-box"><div id="sca_vs_mus_vit_lime" class="plot-inner"></div></div>
+  <div class="plot-box"><div id="sca_vs_mus_vit_shap" class="plot-inner"></div></div>
+</div>
+
+
+<div class="plot-row">
+  <div class="plot-box"><div id="sca_vs_mus_roberta_lime" class="plot-inner"></div></div>
+  <div class="plot-box"><div id="sca_vs_mus_roberta_shap" class="plot-inner"></div></div>
+</div>
 
 <script>
-  function plotFromJSON(jsonPath, divID, title) {
+  function plotSCAvsMuS(jsonPath, divID, title) {
+    fetch(jsonPath)
+      .then(res => res.json())
+      .then(data => {
+        const radii = data.radii;
+        const methods = Object.keys(data).filter(k => k !== 'radii');
+
+        const traces = [
+            {
+              x: [0, 1, 2, 3, 4],
+              y: data['sca'],
+              name: 'SCA',
+              mode: 'lines',
+              line: {width: 2},
+              hoverinfo: 'x+y+name'
+            },
+            {
+                x: data.radii,
+                y: data["lambda_0.500"],
+                name: 'MuS (λ = 0.500)',
+                mode: 'lines',
+                line: {width: 2},
+                hoverinfo: 'x+y+name'
+            },
+            {
+                x: data.radii,
+                y: data["lambda_0.375"],
+                name: 'MuS (λ = 0.375)',
+                mode: 'lines',
+                line: {width: 2},
+                hoverinfo: 'x+y+name'
+            },
+            {
+                x: data.radii,
+                y: data["lambda_0.250"],
+                name: 'MuS (λ = 0.250)',
+                mode: 'lines',
+                line: {width: 2},
+                hoverinfo: 'x+y+name'
+            },
+            {
+                x: data.radii,
+                y: data["lambda_0.125"],
+                name: 'MuS (λ = 0.125)',
+                mode: 'lines',
+                line: {width: 2},
+                hoverinfo: 'x+y+name'
+            },
+        ]
+
+        const layout = {
+            title: title,
+            xaxis: {
+                title: 'Perturbation Radius',
+                showgrid: true,
+                zeroline: true
+            },
+            yaxis: {
+                title: 'Stability Rate', 
+                showgrid: true,
+                zeroline: true
+            },
+            showlegend: true,
+            legend: {
+                x: 0.1,
+                y: 0.1,
+                xanchor: 'left',
+                yanchor: 'bottom',
+                bgcolor: 'rgba(255,255,255,0.8)',
+                bordercolor: '#ccc',
+                borderwidth: 1
+            },
+            margin: {
+                l: 40,
+                r: 40, 
+                b: 40,
+                t: 40,
+                pad: 4
+            },
+            hovermode: 'x unified'
+        };
+
+
+        Plotly.newPlot(divID, traces, layout, { responsive: true });
+      })
+      .catch(err => console.error(`Error loading ${jsonPath}:`, err));
+  }
+
+  // // Plot both datasets
+  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_lime.json', 'sca_vs_mus_vit_lime', 'SCA vs. MuS (ViT, LIME)');
+  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_shap.json', 'sca_vs_mus_vit_shap', 'SCA vs. MuS (ViT, SHAP)');
+  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_lime.json', 'sca_vs_mus_roberta_lime', 'SCA vs. MuS (RoBERTa, LIME)');
+  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_shap.json', 'sca_vs_mus_roberta_shap', 'SCA vs. MuS (RoBERTa, SHAP)');
+</script>
+
+
+
+
+
+[add updated graphs]
+
+
+<script>
+  function plotSoftRatesForEachMethod(jsonPath, divID, title) {
     fetch(jsonPath)
       .then(res => res.json())
       .then(data => {
@@ -351,9 +459,9 @@ We first show that soft stability certificates obtained through SCA are stronger
       .catch(err => console.error(`Error loading ${jsonPath}:`, err));
   }
 
-  // // Plot both datasets
-  // plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
-  // plotFromJSON('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
+  // Plot both datasets
+  plotSoftRatesForEachMethod('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
+  plotSoftRatesForEachMethod('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
 </script>
 
 
@@ -369,11 +477,6 @@ On the right, we show the stability rates we can attain on [RoBERTa](https://hug
   <div class="plot-box"><div id="roberta_soft_stability" class="plot-inner"></div></div>
 </div>
 
-<script>
-  // Plot both datasets
-  plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
-  plotFromJSON('/assets/images/soft_stability/blog_roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability');
-</script>
 
 <br>
 
@@ -571,11 +674,11 @@ Thank you for reading!
 Please cite if you find our work helpful.
 
 ```bibtex
-@article{jin2025softstability,
- title={Probabilistic Stability Guarantees for Feature Attributions},
- author={Jin, Helen and Xue, Anton and You, Weiqiu and Goel, Surbhi and Wong, Eric},
- journal={arXiv preprint arXiv:2504.13787},
- year={2025},
- url={https://arxiv.org/abs/2504.13787}
+@article{jin2025probabilistic,
+  title={Probabilistic Stability Guarantees for Feature Attributions},
+  author={Jin, Helen and Xue, Anton and You, Weiqiu and Goel, Surbhi and Wong, Eric},
+  journal={arXiv preprint arXiv:2504.13787},
+  year={2025},
+  url={https://arxiv.org/abs/2504.13787}
 }
 ```

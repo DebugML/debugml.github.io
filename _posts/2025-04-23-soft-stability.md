@@ -284,7 +284,7 @@ Thirdly, as we show next, soft stability certificates from SCA are much **less c
 
 ## Experiments
 
-We next evaluate the advantages of stability certification algorithm (SCA) over MuS, the only other existing certification method for feature attributions.
+We next evaluate the advantages of stability certification algorithm (SCA) over MuS, a prior existing certification method for feature attributions.
 We also study how stability guarantees vary across vision and language tasks, as well as across different explanation methods.
 
 We first show that soft stability certificates obtained through SCA are stronger than those obtained from MuS, which quickly becomes vacuous as the perturbation size grows. The graphs below are for [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) and [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}, and explanation method [LIME](https://github.com/marcotcr/lime), where we select the top-25% ranked features as the explanation.
@@ -292,13 +292,7 @@ We first show that soft stability certificates obtained through SCA are stronger
 
 <div class="plot-row">
   <div class="plot-box"><div id="sca_vs_mus_vit_lime" class="plot-inner"></div></div>
-  <div class="plot-box"><div id="sca_vs_mus_vit_shap" class="plot-inner"></div></div>
-</div>
-
-
-<div class="plot-row">
   <div class="plot-box"><div id="sca_vs_mus_roberta_lime" class="plot-inner"></div></div>
-  <div class="plot-box"><div id="sca_vs_mus_roberta_shap" class="plot-inner"></div></div>
 </div>
 
 <script>
@@ -392,91 +386,52 @@ We first show that soft stability certificates obtained through SCA are stronger
 
   // // Plot both datasets
   plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_lime.json', 'sca_vs_mus_vit_lime', 'SCA vs. MuS (ViT, LIME)');
-  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_shap.json', 'sca_vs_mus_vit_shap', 'SCA vs. MuS (ViT, SHAP)');
+  // plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_shap.json', 'sca_vs_mus_vit_shap', 'SCA vs. MuS (ViT, SHAP)');
   plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_lime.json', 'sca_vs_mus_roberta_lime', 'SCA vs. MuS (RoBERTa, LIME)');
-  plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_shap.json', 'sca_vs_mus_roberta_shap', 'SCA vs. MuS (RoBERTa, SHAP)');
+  // plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_shap.json', 'sca_vs_mus_roberta_shap', 'SCA vs. MuS (RoBERTa, SHAP)');
 </script>
 
-
-
-
-
-[add updated graphs]
-
-
-<script>
-  function plotSoftRatesForEachMethod(jsonPath, divID, title) {
-    fetch(jsonPath)
-      .then(res => res.json())
-      .then(data => {
-        const radii = data.radii;
-        const methods = Object.keys(data).filter(k => k !== 'radii');
-
-        const traces = methods.map(method => ({
-          x: radii,
-          y: data[method],
-          type: 'scatter',
-          mode: 'lines',
-          name: method,
-          hoverinfo: "x+y+name"
-        }));
-
-        const layout = {
-            title: title,
-            xaxis: {
-                title: 'Perturbation Radius',
-                showgrid: true,
-                zeroline: true
-            },
-            yaxis: {
-                title: 'Stability Rate', 
-                showgrid: true,
-                zeroline: true
-            },
-            showlegend: true,
-            legend: {
-                x: 0.1,
-                y: 0.1,
-                xanchor: 'left',
-                yanchor: 'bottom',
-                bgcolor: 'rgba(255,255,255,0.8)',
-                bordercolor: '#ccc',
-                borderwidth: 1
-            },
-            margin: {
-                l: 40,
-                r: 40, 
-                b: 40,
-                t: 40,
-                pad: 4
-            },
-            hovermode: 'x unified'
-        };
-
-
-        Plotly.newPlot(divID, traces, layout, { responsive: true });
-      })
-      .catch(err => console.error(`Error loading ${jsonPath}:`, err));
-  }
-
-  // Plot both datasets
-  plotSoftRatesForEachMethod('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
-  plotSoftRatesForEachMethod('/assets/images/soft_stability/blog_vit_hard_stability.json', 'vit_hard_stability', 'ViT Hard Stability');
-</script>
-
-
-
+<br>
 We also show the stability rates attainable with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) using different explanation methods.
 For each method, we select the top-25% ranked features as the explanation.
 On the right, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
-
-[add updated graphs]
 
 <div class="plot-row">
   <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
   <div class="plot-box"><div id="roberta_soft_stability" class="plot-inner"></div></div>
 </div>
 
+<script>
+   function plotFromJSON(jsonPath, divID, title) {
+     fetch(jsonPath)
+       .then(res => res.json())
+       .then(data => {
+         const radii = data.radii;
+         const methods = Object.keys(data).filter(k => k !== 'radii');
+ 
+         const traces = methods.map(method => ({
+           x: radii,
+           y: data[method],
+           type: 'scatter',
+           mode: 'lines',
+           name: method,
+         }));
+ 
+         const layout = {
+           title: title,
+           margin: { t: 40, l: 40, r: 40, b: 40 },
+           xaxis: { title: 'Perturbation Radius' },
+           yaxis: { title: 'Stability Rate' }
+         };
+ 
+         Plotly.newPlot(divID, traces, layout, { responsive: true });
+       })
+       .catch(err => console.error(`Error loading ${jsonPath}:`, err));
+   }
+
+   plotFromJSON('/assets/images/soft_stability/blog_vit_soft_stability.json', 'vit_soft_stability', 'ViT Soft Stability');
+   plotFromJSON('/assets/images/soft_stability/blog_roberta_soft_stability.json', 'roberta_soft_stability', 'RoBERTa Soft Stability'); 
+</script>
 
 <br>
 
@@ -636,7 +591,7 @@ fetch('/assets/images/soft_stability/blog_resnet50_stability_vs_lambda.json')
     });
 </script>
 
-
+<br>
 To study the relation between smoothing and stability rate, we use tools from [Boolean function analysis](https://en.wikipedia.org/wiki/Analysis_of_Boolean_functions){:target="_blank"}.
 Our main theoretical finding is as follows.
 

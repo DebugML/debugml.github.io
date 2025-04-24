@@ -287,7 +287,7 @@ Thirdly, as we show next, soft stability certificates from SCA are much **less c
 We next evaluate the advantages of stability certification algorithm (SCA) over MuS, a prior existing certification method for feature attributions.
 We also study how stability guarantees vary across vision and language tasks, as well as across different explanation methods.
 
-We first show that soft stability certificates obtained through SCA are stronger than those obtained from MuS, which quickly becomes vacuous as the perturbation size grows. The graphs below are for [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) and [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}, and explanation method [LIME](https://github.com/marcotcr/lime), where we select the top-25% ranked features as the explanation.
+We first show that soft stability certificates obtained through SCA are stronger than those obtained from MuS, which quickly becomes vacuous as the perturbation size grows. The graphs below are for [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $2000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) and [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}, and explanation method [LIME](https://github.com/marcotcr/lime), where we select the top-25% ranked features as the explanation.
 
 
 <div class="plot-row">
@@ -360,16 +360,16 @@ We first show that soft stability certificates obtained through SCA are stronger
             },
             showlegend: true,
             legend: {
-                x: 0.1,
-                y: 0.1,
+                x: 0.3,
+                y: 1,
                 xanchor: 'left',
-                yanchor: 'bottom',
+                yanchor: 'top',
                 bgcolor: 'rgba(255,255,255,0.8)',
                 bordercolor: '#ccc',
                 borderwidth: 1
             },
             margin: {
-                l: 40,
+                l: 60,
                 r: 40, 
                 b: 40,
                 t: 40,
@@ -386,15 +386,15 @@ We first show that soft stability certificates obtained through SCA are stronger
 
   // // Plot both datasets
   plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_lime.json', 'sca_vs_mus_vit_lime', 'SCA vs. MuS (ViT, LIME)');
-  // plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_vit_shap.json', 'sca_vs_mus_vit_shap', 'SCA vs. MuS (ViT, SHAP)');
   plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_lime.json', 'sca_vs_mus_roberta_lime', 'SCA vs. MuS (RoBERTa, LIME)');
-  // plotSCAvsMuS('/assets/images/soft_stability/blog_sca_vs_mus_roberta_shap.json', 'sca_vs_mus_roberta_shap', 'SCA vs. MuS (RoBERTa, SHAP)');
 </script>
 
 <br>
 We also show the stability rates attainable with a [Vision Transformer](https://huggingface.co/google/vit-base-patch16-224){:target="_blank"} model over $1000$ [samples from ImageNet](https://github.com/helenjin/soft_stability/tree/main/imagenet-sample-images) using different explanation methods.
 For each method, we select the top-25% ranked features as the explanation.
 On the right, we show the stability rates we can attain on [RoBERTa](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment){:target="_blank"} and [TweetEval](https://huggingface.co/datasets/cardiffnlp/tweet_eval){:target="_blank"}.
+
+
 
 <div class="plot-row">
   <div class="plot-box"><div id="vit_soft_stability" class="plot-inner"></div></div>
@@ -419,11 +419,30 @@ On the right, we show the stability rates we can attain on [RoBERTa](https://hug
  
          const layout = {
            title: title,
-           margin: { t: 40, l: 40, r: 40, b: 40 },
-           xaxis: { title: 'Perturbation Radius' },
-           yaxis: { title: 'Stability Rate' }
+           margin: { t: 40, l: 60, r: 40, b: 40, pad: 4 },
+           xaxis: { title: 'Perturbation Radius',
+                showgrid: true,
+                zeroline: true,
+                automargin: true
+            },
+           yaxis: { title: 'Stability Rate',
+                showgrid: true,
+                zeroline: true,
+                range: [0, 1]
+            },
+            showlegend: true,
+            legend: {
+              x: 0.55,
+              y: 1,
+              xanchor: 'left',
+              yanchor: 'top',
+              bgcolor: 'rgba(255,255,255,0.8)',
+              bordercolor: '#ccc',
+              borderwidth: 1
+            },
+            hovermode: 'x unified'
          };
- 
+
          Plotly.newPlot(divID, traces, layout, { responsive: true });
        })
        .catch(err => console.error(`Error loading ${jsonPath}:`, err));
@@ -539,7 +558,8 @@ function createPlot(elementId, data, title) {
         xaxis: {
             title: 'Perturbation Radius',
             showgrid: true,
-            zeroline: true
+            zeroline: true,
+            range: [0, 20]
         },
         yaxis: {
             title: 'Stability Rate', 
@@ -549,16 +569,16 @@ function createPlot(elementId, data, title) {
         },
         showlegend: true,
         legend: {
-            x: 0.1,
-            y: 0.1,
-            xanchor: 'left',
-            yanchor: 'bottom',
+            x: 1,
+            y: 0.66,
+            xanchor: 'right',
+            yanchor: 'top',
             bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#ccc',
             borderwidth: 1
         },
         margin: {
-            l: 40,
+            l: 60,
             r: 40, 
             b: 40,
             t: 40,

@@ -579,3 +579,19 @@ Lyle Ungar:
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://www.cis.upenn.edu/~ungar/"
+
+Vitoria Guardieiro:
+  name    : "Vitoria Guardieiro"
+  avatar  : "/assets/images/avatar/vitoriag.png"
+  bio     : "PhD Student at UPenn"
+  home    : https://viguardieiro.github.io/
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:vitoriag@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://viguardieiro.github.io/"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/viguardieiro"

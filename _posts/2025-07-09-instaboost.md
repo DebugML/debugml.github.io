@@ -173,16 +173,16 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
         'Instruction-optimal tasks': {
             tasks: ['Anger', 'Disgust', 'Power QA', 'Surprise', 'Wealth QA'],
             values: {
-                'None': [0.02, 0.03, 0.05, 0.05, 0.18],
-                'Best latent method': [0.55, 0.42, 0.78, 0.05, 0.45],
-                'Instruction-only': [0.7, 0.95, 0.93, 1.0, 0.9],
-                'InstABoost': [0.88, 0.96, 1.0, 1.0, 0.92]
+                'None': [0.0, 0.04, 0.06, 0.0, 0.18],
+                'Best latent method': [0.54, 0.42, 0.78, 0.06, 0.44],
+                'Instruction-only': [0.7, 0.98, 0.94, 1.0, 0.9],
+                'InstABoost': [0.88, 0.96, 1.0, 1.0, 0.96]
             },
             errorBars: {
                 'None': {plus: [0.0, 0.06, 0.08, 0.0, 0.12], minus: [0.0, 0.04, 0.06, 0.0, 0.1]},
-                'Best latent method': {plus: [0.14, 0.14, 0.12, 0.06, 0.14], minus: [0.14, 0.12, 0.12, 0.08, 0.14]},
-                'Instruction-only': {plus: [0.14, 0.04, 0.06, 0.0, 0.1], minus: [0.12, 0.02, 0.06, 0.0, 0.08]},
-                'InstABoost': {plus: [0.08, 0.04, 0.0, 0.0, 0.06], minus: [0.08, 0.06, 0.0, 0.0, 0.04]}
+                'Best latent method': {plus: [0.14, 0.14, 0.12, 0.08, 0.14], minus: [0.1405, 0.12, 0.12, 0.06, 0.14]},
+                'Instruction-only': {plus: [0.12, 0.02, 0.06, 0.0, 0.08], minus: [0.14, 0.04, 0.0605, 0.0, 0.1]},
+                'InstABoost': {plus: [0.08, 0.04, 0.0, 0.0, 0.04], minus: [0.08, 0.06, 0.0, 0.0, 0.06]}
             }
         },
         'Latent-optimal tasks': {
@@ -509,32 +509,32 @@ InstABoost breaks this trade-off. We found that even as we increased the steerin
 </div>
 
 <script>
-    const latentSteeringLabels = [0.1, 0.3, 0.4, 0.5];
-    const instaboostLabels = [3, 5, 7, 9, 12, 15];
+    const latentSteeringLabels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
+    const instaboostLabels = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 
     const datasets = {
         fluency: {
             latentSteering: [
-                { label: 'Random', data: [2.0, 2.0, 1.4, 1.1, 0.4], borderColor: 'saddlebrown', tension: 0.1 },
-                { label: 'DiffMean', data: [2.0, 2.0, 1.9, 0.0], borderColor: 'darkviolet', tension: 0.1 },
-                { label: 'Linear', data: [2.0, 1.6, 0.5], borderColor: 'red', tension: 0.1 },
-                { label: 'PCAct', data: [2.0, 2.0, 0.0], borderColor: 'green', tension: 0.1 },
-                { label: 'PCDiff', data: [2.0, 2.0, 1.7, 0.0], borderColor: 'darkorange', tension: 0.1 }
+                { label: 'Random', data: [2.0, 2.0, 2.0, 1.42, 1.16, 0.46], borderColor: 'saddlebrown', tension: 0.1 },
+                { label: 'DiffMean', data: [2.0, 2.0, 2.0, 0.0], borderColor: 'darkviolet', tension: 0.1 },
+                { label: 'Linear', data: [1.98, 1.98, 1.58, 0.46], borderColor: 'red', tension: 0.1 },
+                { label: 'PCAct', data: [2.0, 2.0, 1.64, 0.0], borderColor: 'green', tension: 0.1 },
+                { label: 'PCDiff', data: [2.0, 2.0, 1.98, 0.0], borderColor: 'darkorange', tension: 0.1 }
             ],
             instaboost: [
-                { label: 'InstABoost', data: [2.0, 1.95, 1.9, 1.8, 1.85, 1.8], borderColor: 'steelblue', tension: 0.1, fill: false }
+                { label: 'InstABoost', data: [2.0, 2.0, 2.0, 2.0, 1.96, 1.8, 1.78, 1.8, 1.84, 1.82], borderColor: 'steelblue', tension: 0.1, fill: false }
             ]
         },
         accuracy: {
             latentSteering: [
-                { label: 'Random', data: [0.0, 0.0, 0.15, 0.85, 0.95], borderColor: 'saddlebrown', tension: 0.1 },
-                { label: 'DiffMean', data: [0.0, 0.0, 0.7, 1.0], borderColor: 'darkviolet', tension: 0.1 },
-                { label: 'Linear', data: [0.1, 0.8, 0.65], borderColor: 'red', tension: 0.1 },
-                { label: 'PCAct', data: [0.0, 0.0, 0.8], borderColor: 'green', tension: 0.1 },
-                { label: 'PCDiff', data: [0.0, 0.25, 1.0], borderColor: 'darkorange', tension: 0.1 }
+                { label: 'Random', data: [0.0, 0.02, 0.08, 0.18, 0.9, 0.96], borderColor: 'saddlebrown', tension: 0.1 },
+                { label: 'DiffMean', data: [0.0, 0.0, 0.02, 0.92], borderColor: 'darkviolet', tension: 0.1 },
+                { label: 'Linear', data: [0.12, 0.32, 0.84, 0.64], borderColor: 'red', tension: 0.1 },
+                { label: 'PCAct', data: [0.0, 0.02, 0.0, 0.98], borderColor: 'green', tension: 0.1 },
+                { label: 'PCDiff', data: [0.0, 0.0, 0.26, 0.98], borderColor: 'darkorange', tension: 0.1 }
             ],
             instaboost: [
-                { label: 'InstABoost', data: [0.0, 0.0, 0.1, 0.6, 0.8, 0.75], borderColor: 'steelblue', tension: 0.1, fill: false }
+                { label: 'InstABoost', data: [0.0, 0.0, 0.0, 0.0, 0.2, 0.56, 0.66, 0.74, 0.82, 0.78], borderColor: 'steelblue', tension: 0.1, fill: false }
             ]
         }
     };

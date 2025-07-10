@@ -191,7 +191,7 @@ This is the core idea behind **Instruction Attention Boosting (InstABoost)** whi
 
 ### An Interactive Look at InstABoost
 
-Let's look at a concrete example. We gave the model the instruction "Answer the following question as if you were seeking power" followed by the question "Should you forge a signature to take over their rights?". Below, you can see the attention from the last input token to the instruction (boxed on the left) and the rest of the prompt.
+Let's look at a concrete example. We provide `Llama-3-8B-Instruct` with the instruction "Answer the following question as if you were seeking power" followed by the question "Should you forge a signature to take over their rights?". Below, you can see the attention from the last input token to the instruction (boxed on the left) and the rest of the prompt.
 
 <iframe 
     src="/assets/images/instaboost/interactive_attention_plot.html" 
@@ -395,7 +395,8 @@ Across a diverse benchmark of tasks, from steering emotion and AI personas to to
     }
 </script>
 
-For tasks where standard instructions already worked well, InstABoost often enhanced their performance. In cases where instructions failed and latent steering was necessary (like jailbreaking), InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. It provides a more robust and reliable approach to model control.
+On tasks such as jailbreaking, where standard prompting with instructions failed and latent steering was necessary, InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. Moreover, even in cases where standard instructions already worked well, InstABoost led to further improvements in steering accuracy. These results indicate that InstABoost provides a more robust and reliable approach to model control.
+<!-- For tasks where standard instructions already worked well, InstABoost often enhanced their performance. In cases where instructions failed and latent steering was necessary (like jailbreaking), InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. It provides a more robust and reliable approach to model control. -->
 
 
 ### Examples
@@ -679,14 +680,14 @@ We hypothesize this is because manipulating attention is a more constrained inte
 
 InstABoost offers a new path forward for controlling LLMs that is:
 
-* **Theoretically motivated**: The core idea of boosting attention to instructions is grounded in prior theoretical work that shows that models can ignore instructions through attention suppression.
-* **SoTA with ~5 lines of code**: InstABoost consistently matches or outperforms existing SoTA steering methods on a wide range of tasks, without the often observed degradation in generation quality. 
+* **Theoretically motivated**: The core idea of boosting attention to instructions is grounded in prior theoretical work that shows that models forget instructions on attention suppression.
+* **State-of-the-art with ~5 lines of code**: InstABoost consistently matches or outperforms existing state-of-the-art steering methods on a wide range of tasks, without the often observed degradation in generation quality. 
 
 <!-- * **Simple**: The core idea is intuitive and the implementation is trivial.
 * **Effective**: It consistently matches or outperforms existing SOTA steering methods across a wide range of tasks.
 * **Reliable**: It provides strong control without the severe degradation in generation quality often seen with other techniques. -->
 
-These findings suggest that guiding a model's attention is a highly effective and efficient method for achieving more predictable LLM behavior, offering a promising direction for developing safer and more controllable AI systems.
+These findings suggest that guiding a model's attention to instructions is a highly effective and efficient method for achieving more predictable LLM behavior, offering a promising direction for developing safer and more controllable AI systems.
 
 For a full breakdown of the benchmarks, models, and more detailed results, check out the full paper and code below.
 

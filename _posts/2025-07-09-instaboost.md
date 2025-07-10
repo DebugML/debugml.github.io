@@ -41,10 +41,100 @@ MathJax = {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-    /* Basic styles for tabs */
+    /* Enhanced tab styles */
     .tab-container { display: flex; cursor: pointer; }
-    .tab { padding: 10px 20px; margin-right: 5px; background: #ddd; border-radius: 5px; }
-    .tab.active { background: #aaa; font-weight: bold; }
+    
+    /* Tab list styling */
+    .tab {
+        display: flex;
+        list-style: none;
+        margin: 0 auto;
+        padding: 0;
+        border-bottom: 2px solid #e0e0e0;
+        background: #f8f9fa;
+        border-radius: 8px 8px 0 0;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-width: fit-content;
+        justify-content: center;
+    }
+    
+    /* Individual tab items */
+    .tab li {
+        margin: 0;
+        border-right: 1px solid #e0e0e0;
+        flex: 1;
+        text-align: center;
+    }
+    
+    .tab li:last-child {
+        border-right: none;
+    }
+    
+    /* Tab links */
+    .tab li a {
+        display: block;
+        padding: 12px 20px;
+        text-decoration: none;
+        color: #555;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        text-align: center;
+        min-width: 120px;
+    }
+    
+    .tab li a:hover {
+        background: #e9ecef;
+        color: #333;
+    }
+    
+    /* Active tab styling */
+    .tab li.active a {
+        background: #007bff;
+        color: white;
+        font-weight: 600;
+        position: relative;
+    }
+    
+    .tab li.active a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #007bff;
+    }
+    
+    /* Tab content styling */
+    .tab-content {
+        background: white;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin: 0 auto;
+    }
+    
+    .tab-content > li {
+        display: none;
+        list-style: none;
+        margin: 0;
+        padding: 20px;
+    }
+    
+    .tab-content > li.active {
+        display: block;
+    }
+    
+    /* Center table content within tab */
+    .tab-content table {
+        margin: 0 auto;
+    }
+    
     #plot-container { margin-top: 20px; }
 
     .plot-row {
@@ -73,12 +163,12 @@ MathJax = {
 
 ## The Problem: LLMs Can Be Bad Listeners
 
-Large Language Models (LLMs) have become incredibly capable, but getting them to behave reliably is still a central challenge. We often find that even with carefully crafted prompts, models can overlook critical constraints or refuse to follow instructions.
+Large Language Models (LLMs) have become incredibly capable, but getting them to behave reliably is still a central challenge. We often find that even with carefully crafted prompts, models overlook critical constraints or entirely refuse to follow instructions.
 
-To guide their behavior, the field has generally used two approaches:
+To guide/control LLM behavior, the field has generally used two approaches:
 
-* **Prompt-based steering:** Giving the model explicit natural language instructions in the prompt. It’s simple, but as we’ve all experienced, it can be hit-or-miss.
-* **Latent space steering:** Modifying the model's internal activations during generation to guide its output. While powerful, these methods can be complex, and studies have shown their effectiveness is often limited and task-dependent.
+* **Prompt-based steering:** Giving the model explicit natural language instructions in the prompt.
+* **Latent space steering:** Modifying the model's internal activations during generation to guide its output. While in theory more powerful than prompt-based steering, these methods are complex, often have many hyperparameters, and often have limited and task-dependent effectiveness in practice.
 
 What if there were a way to use internal manipulation to make simple prompting more powerful and reliable?
 
@@ -312,6 +402,8 @@ For tasks where standard instructions already worked well, InstABoost often enha
 
 
 ### Examples
+
+Click through the following tabs to see some examples of the output from using different existing steering methods compared to InstABoost.
 
 <style>
 /* Reduce bottom margin for notice boxes to tighten the spacing */
@@ -580,6 +672,8 @@ InstABoost breaks this trade-off. We found that even as we increased the steerin
     createChart('accuracy-instaboost', 'InstABoost', 'Steering Factor', '', instaboostLabels, datasets.accuracy.instaboost, 1.00);
 
 </script>
+
+<script src="/assets/js/tabs.js"></script>
 
 We hypothesize this is because manipulating attention is a more constrained intervention than directly adding vectors to hidden states, which can push the model into out-of-distribution territory that disrupts fluency.
 

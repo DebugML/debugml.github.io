@@ -158,8 +158,8 @@ MathJax = {
 </style>
 
 
-> Recent theoretical work shows that transformer-based models can ignore rules by suppressing attention to them. Does the opposite, or boosting attention to an instruction, improve the model's ability to follow it? We find that a simple method (which we call **InstABoost**) for boosting attention to instructions outperforms state-of-the-art steering methods on a variety of tasks, all while avoiding common side effects of steering such as decreased fluency.
-
+> Recent theoretical work shows that transformer-based models can ignore rules by suppressing attention to them. Does the opposite, or boosting attention to an instruction, improve the model's ability to follow it? We introduce **InstABoost**, a simple method for boosting attention to instructions, that outperforms state-of-the-art steering methods on a variety of tasks, all while avoiding common side effects from steering such as decreased fluency.
+<!-- We find that a simple method (which we call **InstABoost**) for boosting attention to instructions outperforms state-of-the-art steering methods on a variety of tasks, all while avoiding common side effects from steering such as decreased fluency. -->
 
 ## The Problem: LLMs Can Be Bad Listeners
 
@@ -180,7 +180,7 @@ Further, the paper presents empirical evidence of this rule suppression in Large
 This led us to the follow up question:
 
 <div class="notice--info" style="font-size: 1.0em !important;">
-<i>“If turning down attention makes a model break a rule, can we enforce a rule by turning up its attention?”</i>
+<i>“If turning down attention to a rule makes a model ignore it, can turning up attention to the rule help enforce it?”</i>
 </div>
 
 This is the core idea behind **Instruction Attention Boosting (InstABoost)**:
@@ -189,7 +189,7 @@ This is the core idea behind **Instruction Attention Boosting (InstABoost)**:
 2. At every layer and head of the model, boost the attention scores corresponding to the instruction's tokens.
 3.  Re-normalize the scores so they remain a valid probability distribution.
 
-In plain English, we’re just telling the model to "pay more attention" to the instruction at every step of its reasoning process.
+In plain English, we’re just telling the model to "pay more attention" to the instruction at every step of its generation process.
 
 ### An Interactive Look at InstABoost
 

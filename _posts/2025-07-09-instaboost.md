@@ -6,8 +6,8 @@ excerpt: "We improve instruction-following in large language models by boosting 
 
 header:
  overlay_filter: "0.75"
- overlay_image: /assets/images/instaboost/teaser.png
- teaser: /assets/images/instaboost/insta-boost-overview.jpg
+ overlay_image: /assets/images/instaboost/teaser.jpg
+ teaser: /assets/images/instaboost/teaser.jpg
  actions:
    - label: "Paper"
      url: https://arxiv.org/abs/2506.13734

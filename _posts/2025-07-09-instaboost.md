@@ -7,7 +7,7 @@ excerpt: "We improve instruction-following in large language models by boosting 
 header:
  overlay_filter: "0.75"
  overlay_image: /assets/images/instaboost/teaser.png
- teaser: /assets/images/instaboost/teaser.png
+ teaser: /assets/images/instaboost/insta-boost-overview.jpg
  actions:
    - label: "Paper"
      url: https://arxiv.org/abs/2506.13734
@@ -26,11 +26,6 @@ gallery_bar_groups:
     image_path: /assets/images/instaboost/bar_groups.png
     title: Steering accuracy for each method
 
-gallery_fluency_acc:
-  - url: assets/images/instaboost/fluency_acc_advbench.png
-    image_path: assets/images/instaboost/fluency_acc_advbench.png
-    title: Fluency vs. Accuracy for different steering methods
-
 ---
 
 <script>
@@ -43,8 +38,7 @@ MathJax = {
 </script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-<script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
     /* Basic styles for tabs */
@@ -150,7 +144,106 @@ So, it's simple and intuitive, but does it work?
 
 Yes. Across a diverse benchmark of tasks -- from steering emotion and AI personas to toxicity reduction and jailbreaking -- InstABoost consistently either outperformed or matched the strongest competing methods. This includes both standard instruction-only prompting and a suite of six different latent steering techniques.
 
-{% include gallery id="gallery_bar_groups" layout="" caption="Bar chart comparing InstABoost with other methods across various tasks. InstABoost (blue) consistently outperforms or matches instruction-only prompting (orange) and the best-performing latent steering method (green) across the board." %}
+<div style="margin-bottom: 20px;">
+    <div style="width: 100%;"><canvas id="chart1"></canvas></div>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 20px;">
+    <div style="width: 52%;"><canvas id="chart2"></canvas></div>
+    <div style="width: 48%;"><canvas id="chart3"></canvas></div>
+</div>
+
+<script>
+    const chartData = {
+        'Tasks where instruction and latent steering are equivalent': {
+            tasks: ['Fear', 'Power MCQ', 'Sadness', 'Toxicity', 'TriviaQA', 'TruthfulQA', 'Wealth MCQ'],
+            values: {
+                'None': [0.02, 0.02, 0.02, 0.03, 0.52, 0.65, 0.18],
+                'Best latent method': [0.5, 0.48, 0.65, 0.48, 0.5, 0.68, 0.75],
+                'Instruction-only': [0.5, 0.52, 0.6, 0.52, 0.52, 0.7, 0.8],
+                'InstABoost': [0.85, 0.68, 0.9, 0.62, 0.55, 0.7, 0.9]
+            }
+        },
+        'Instruction-optimal tasks': {
+            tasks: ['Anger', 'Disgust', 'Power QA', 'Surprise', 'Wealth QA'],
+            values: {
+                'None': [0.02, 0.03, 0.05, 0.05, 0.18],
+                'Best latent method': [0.55, 0.42, 0.78, 0.05, 0.45],
+                'Instruction-only': [0.7, 0.95, 0.93, 1.0, 0.9],
+                'InstABoost': [0.88, 0.96, 1.0, 1.0, 0.92]
+            }
+        },
+        'Latent-optimal tasks': {
+            tasks: ['AdvBench', 'Jailbreak Bench', 'Joy'],
+            values: {
+                'None': [0.01, 0.02, 0.2],
+                'Best latent method': [0.8, 0.45, 0.9],
+                'Instruction-only': [0.01, 0.02, 0.38],
+                'InstABoost': [0.85, 0.66, 0.62]
+            }
+        }
+    };
+
+    const colors = {
+        'None': 'rgb(220, 57, 57)',
+        'Best latent method': 'rgb(107, 178, 88)',
+        'Instruction-only': 'rgb(255, 159, 64)',
+        'InstABoost': 'rgb(54, 162, 235)'
+    };
+
+    const titles = [
+        '(a) Tasks where instruction and latent steering are equivalent',
+        '(b) Instruction-optimal tasks',
+        '(c) Latent-optimal tasks'
+    ];
+
+    const dataKeys = Object.keys(chartData);
+    const charts = [];
+
+    for (let i = 0; i < dataKeys.length; i++) {
+        const key = dataKeys[i];
+        const subplotData = chartData[key];
+        const datasets = Object.keys(subplotData.values).map(method => ({
+            label: method,
+            data: subplotData.values[method],
+            backgroundColor: colors[method],
+        }));
+
+        const chart = new Chart(document.getElementById(`chart${i+1}`), {
+            type: 'bar',
+            data: {
+                labels: subplotData.tasks,
+                datasets: datasets
+            },
+            options: {
+                // aspectRatio: 3.5,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: titles[i]
+                    },
+                    legend: {
+                        display: i === 0, // Only display legend for the first chart
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1.05,
+                        title: {
+                            display: i === 0, // Only display y-axis title for the first chart
+                            text: 'Accuracy'
+                        }
+                    }
+                }
+            }
+        });
+        charts.push(chart);
+    }
+</script>
 
 For tasks where standard instructions already worked well, InstABoost often enhanced their performance. In cases where instructions failed and latent steering was necessary (like jailbreaking), InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. It provides a more robust and reliable approach to model control.
 
@@ -340,7 +433,90 @@ The difference is not just a number on a chart; it's obvious in the model's outp
 
 InstABoost breaks this trade-off. We found that even as we increased the steering multiplier to achieve high task accuracy, InstABoost maintained high generation fluency, a trend that holds across steering strengths.
 
-{% include gallery id="gallery_fluency_acc" layout="" caption="Fluency and accuracy as we increase the steering factor. Unlike other latent steering methods, InstABoost increases task accuracy without a drastic drop in fluency." %}
+<div class="plot-row" style="margin-bottom: 1em;">
+    <div class="plot-box"><div class="plot-inner"><canvas id="fluency-latent-steering"></canvas></div></div>
+    <div class="plot-box"><div class="plot-inner"><canvas id="fluency-instaboost"></canvas></div></div>
+</div>
+<div class="plot-row">
+    <div class="plot-box"><div class="plot-inner"><canvas id="accuracy-latent-steering"></canvas></div></div>
+    <div class="plot-box"><div class="plot-inner"><canvas id="accuracy-instaboost"></canvas></div></div>
+</div>
+<div style="text-align: center; margin-top: 1em;">
+    <i>Fluency and accuracy as we increase the steering factor. Unlike other latent steering methods, InstABoost increases task accuracy without a drastic drop in fluency.</i>
+</div>
+
+<script>
+    const latentSteeringLabels = [0.1, 0.3, 0.4, 0.5];
+    const instaboostLabels = [3, 5, 7, 9, 12, 15];
+
+    const datasets = {
+        fluency: {
+            latentSteering: [
+                { label: 'Random', data: [2.0, 2.0, 1.4, 1.1, 0.4], borderColor: 'saddlebrown', tension: 0.1 },
+                { label: 'DiffMean', data: [2.0, 2.0, 1.9, 0.0], borderColor: 'darkviolet', tension: 0.1 },
+                { label: 'Linear', data: [2.0, 1.6, 0.5], borderColor: 'red', tension: 0.1 },
+                { label: 'PCAct', data: [2.0, 2.0, 0.0], borderColor: 'green', tension: 0.1 },
+                { label: 'PCDiff', data: [2.0, 2.0, 1.7, 0.0], borderColor: 'darkorange', tension: 0.1 }
+            ],
+            instaboost: [
+                { label: 'InstABoost', data: [2.0, 1.95, 1.9, 1.8, 1.85, 1.8], borderColor: 'steelblue', tension: 0.1, fill: false }
+            ]
+        },
+        accuracy: {
+            latentSteering: [
+                { label: 'Random', data: [0.0, 0.0, 0.15, 0.85, 0.95], borderColor: 'saddlebrown', tension: 0.1 },
+                { label: 'DiffMean', data: [0.0, 0.0, 0.7, 1.0], borderColor: 'darkviolet', tension: 0.1 },
+                { label: 'Linear', data: [0.1, 0.8, 0.65], borderColor: 'red', tension: 0.1 },
+                { label: 'PCAct', data: [0.0, 0.0, 0.8], borderColor: 'green', tension: 0.1 },
+                { label: 'PCDiff', data: [0.0, 0.25, 1.0], borderColor: 'darkorange', tension: 0.1 }
+            ],
+            instaboost: [
+                { label: 'InstABoost', data: [0.0, 0.0, 0.1, 0.6, 0.8, 0.75], borderColor: 'steelblue', tension: 0.1, fill: false }
+            ]
+        }
+    };
+
+    function createChart(canvasId, title, xLabel, yLabel, labels, chartData, yMax, showLegend=false) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: chartData.map(d => ({...d, fill: false}))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: title },
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: xLabel },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 5
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: yMax,
+                        title: { display: true, text: yLabel }
+                    }
+                }
+            }
+        });
+    }
+
+    createChart('fluency-latent-steering', 'Latent steering', 'Steering Factor', 'Fluency Score', latentSteeringLabels, datasets.fluency.latentSteering, 2.1);
+    createChart('fluency-instaboost', 'InstABoost', 'Steering Factor', '', instaboostLabels, datasets.fluency.instaboost, 2.1);
+    createChart('accuracy-latent-steering', 'Latent steering', 'Steering Factor', 'Accuracy', latentSteeringLabels, datasets.accuracy.latentSteering, 1.00);
+    createChart('accuracy-instaboost', 'InstABoost', 'Steering Factor', '', instaboostLabels, datasets.accuracy.instaboost, 1.00);
+
+</script>
 
 We hypothesize this is because manipulating attention is a more constrained intervention than directly adding vectors to hidden states, which can push the model into out-of-distribution territory that disrupts fluency.
 

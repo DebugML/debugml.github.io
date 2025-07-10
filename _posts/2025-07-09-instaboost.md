@@ -183,13 +183,11 @@ This led us to the follow up question:
 <i>“If turning down attention to a rule makes a model ignore it, can turning up attention to the rule help enforce it?”</i>
 </div>
 
-This is the core idea behind **Instruction Attention Boosting (InstABoost)**:
+This is the core idea behind **Instruction Attention Boosting (InstABoost)** which forces the model to "pay more attention" to the instruction during generation of it's response. InstABoost consists of the following three main steps:
 
-1.  Prepend a clear instruction to your query (e.g., "Answer the following question as if you were seeking power.").
-2. At every layer and head of the model, boost the attention scores corresponding to the instruction's tokens.
-3.  Re-normalize the scores so they remain a valid probability distribution.
-
-In plain English, we’re just telling the model to "pay more attention" to the instruction at every step of its generation process.
+1. Prepend an instruction to your query (e.g., "Answer the following question as if you were seeking power.").
+2. At every layer and head of the model, boost the attention scores corresponding to the instruction's tokens (by a multiplicative factor).
+3. Re-normalize the scores so they still sum to one.
 
 ### An Interactive Look at InstABoost
 
@@ -205,7 +203,7 @@ Let's look at a concrete example. We gave the model the instruction "Answer the 
 <span style="font-size: 0.8em;">**Use the slider to adjust the `multiplier` and see how the attention scores and the model's output change.**</span>
 
 
-Without any intervention, the model produces a standard refusal. But what happens when we apply InstABoost? With a low multiplier, the model is evasive. But as you increase it, you can see the attention on the "seeking power" instruction intensify. The model's behavior shifts dramatically, from refusal to a direct, power-seeking response.
+Without any intervention, the model produces a standard refusal. What happens when we apply InstABoost? With a low multiplier (meaning only a small boost to the instruction's attention), the model is still evasive. As you increase the attention multiplier to increase attention on the "seeking power" instruction, the model's behavior shifts dramatically. At higher multipliers, the model shifts from providing a refusal to providing with a direct, power-seeking response, as requested.
 
 
 This powerful effect is controlled by a single, easy-to-tune hyperparameter: the boosting `multiplier`. And implementing it is just as easy.
@@ -230,9 +228,8 @@ That's it. It’s a lightweight modification that can be easily added to existin
 
 ## Simple, Yet State-of-the-Art
 
-So, it's simple and intuitive, but does it work?
-
-Yes. Across a diverse benchmark of tasks -- from steering emotion and AI personas to toxicity reduction and jailbreaking -- InstABoost consistently either outperformed or matched the strongest competing methods. This includes both standard instruction-only prompting and a suite of six different latent steering techniques.
+Not only is InstABoost simple and intuitive, but it also achieves state-of-the-art steering performance.
+Across a diverse benchmark of tasks, from steering emotion and AI personas to toxicity reduction and jailbreaking, InstABoost consistently either outperformed or matched the strongest competing methods. This includes both standard instruction-only prompting and a suite of six different latent steering techniques.
 
 <div style="margin-bottom: 20px;">
     <div style="width: 100%;"><canvas id="chart1"></canvas></div>
@@ -567,7 +564,8 @@ p[class*="notice--"] {
 
 A notorious side effect of many latent steering methods is that as you increase the steering strength to get more control, the model's output quality degrades, often becoming incoherent nonsense. This forces a difficult trade-off between control and fluency.
 
-The difference is not just a number on a chart; it's obvious in the model's outputs. Here’s one example where latent steering collapses into repetitive gibberish, while **InstABoost** remains fluent and on-task:
+While we measure such degradation in output fluency, the difference in fluency between InstABoost and baselines is obvious from a looking at a few output.
+The following is an example where latent steering collapses into repetitive gibberish, while **InstABoost** remains fluent and on-task:
 
 <table style="width: 97%; border-collapse: collapse !important; border-spacing: 0px;">
   <tbody>
@@ -675,13 +673,13 @@ InstABoost breaks this trade-off. We found that even as we increased the steerin
 
 <script src="/assets/js/tabs.js"></script>
 
-We hypothesize this is because manipulating attention is a more constrained intervention than directly adding vectors to hidden states, which can push the model into out-of-distribution territory that disrupts fluency.
+We hypothesize this is because manipulating attention is a more constrained intervention than directly adding vectors to hidden states, which can more easily push the model into out-of-distribution territory that disrupts fluency.
 
 ## Final Thoughts
 
 InstABoost offers a new path forward for controlling LLMs that is:
 
-* **Theoretically motivated**: The core idea of boosting attention on instructions to follow is grounded in prior theoretical work that shows that models forget instructions on attention suppression.
+* **Theoretically motivated**: The core idea of boosting attention to instructions is grounded in prior theoretical work that shows that models can ignore instructions through attention suppression.
 * **SoTA with ~5 lines of code**: InstABoost consistently matches or outperforms existing SoTA steering methods on a wide range of tasks, without the often observed degradation in generation quality. 
 
 <!-- * **Simple**: The core idea is intuitive and the implementation is trivial.
@@ -690,7 +688,7 @@ InstABoost offers a new path forward for controlling LLMs that is:
 
 These findings suggest that guiding a model's attention is a highly effective and efficient method for achieving more predictable LLM behavior, offering a promising direction for developing safer and more controllable AI systems.
 
-For a full breakdown of the benchmarks, models, and more detailed results, check out the full paper.
+For a full breakdown of the benchmarks, models, and more detailed results, check out the full paper and code below.
 
 **Paper: [https://arxiv.org/abs/2506.13734](https://arxiv.org/abs/2506.13734)**
 

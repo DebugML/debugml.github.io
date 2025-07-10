@@ -681,14 +681,14 @@ We hypothesize this is because manipulating attention is a more constrained inte
 
 InstABoost offers a new path forward for controlling LLMs that is:
 
-* **Theoretically motivated**: The core idea of boosting attention on instructions to follow is grounded in prior theoretical work that shows that models forget instructions on attention suppression.
+* **Theoretically motivated**: The core idea of boosting attention to instructions is grounded in prior theoretical work that shows that models forget instructions on attention suppression.
 * **SoTA with ~5 lines of code**: InstABoost consistently matches or outperforms existing SoTA steering methods on a wide range of tasks, without the often observed degradation in generation quality. 
 
 <!-- * **Simple**: The core idea is intuitive and the implementation is trivial.
 * **Effective**: It consistently matches or outperforms existing SOTA steering methods across a wide range of tasks.
 * **Reliable**: It provides strong control without the severe degradation in generation quality often seen with other techniques. -->
 
-These findings suggest that guiding a model's attention is a highly effective and efficient method for achieving more predictable LLM behavior, offering a promising direction for developing safer and more controllable AI systems.
+These findings suggest that guiding a model's attention to instructions is a highly effective and efficient method for achieving more predictable LLM behavior, offering a promising direction for developing safer and more controllable AI systems.
 
 For a full breakdown of the benchmarks, models, and more detailed results, check out the full paper.
 

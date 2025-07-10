@@ -398,7 +398,8 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
     }
 </script>
 
-For tasks where standard instructions already worked well, InstABoost often enhanced their performance. In cases where instructions failed and latent steering was necessary (like jailbreaking), InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. It provides a more robust and reliable approach to model control.
+On tasks such as jailbreaking, where standard prompting with instructions failed and latent steering was necessary, InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. Moreover, even in cases where standard instructions already worked well, InstABoost led to further improvements in steering accuracy. These results indicate that InstABoost provides a more robust and reliable approach to model control.
+<!-- For tasks where standard instructions already worked well, InstABoost often enhanced their performance. In cases where instructions failed and latent steering was necessary (like jailbreaking), InstABoost surpassed standard latent steering, achieving accuracies of 89% on AdvBench and 66.6% on JailbreakBench. It provides a more robust and reliable approach to model control. -->
 
 
 ### Examples

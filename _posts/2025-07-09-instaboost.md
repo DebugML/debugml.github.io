@@ -68,7 +68,7 @@ MathJax = {
 </style>
 
 
-> Recent theoretical work has found that transformer-based models can be made to ignore rules by suppressing attention on them. What about the opposite? Does boosting attention on an instruction improve the model's ability to follow it? The answer is yes! This overly simple method (which we named **InstABoost**) outperforms SOTA steering methods on a variety of tasks, all while avoiding common side effects.
+> Recent theoretical work shows that transformer-based models can ignore rules by suppressing attention to them. Does the opposite, or boosting attention to an instruction, improve the model's ability to follow it? We find that a simple method (which we call **InstABoost**) for boosting attention to instructions outperforms state-of-the-art steering methods on a variety of tasks, all while avoiding common side effects of steering such as decreased fluency.
 
 
 ## The Problem: LLMs Can Be Bad Listeners
@@ -152,6 +152,7 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
     <div style="width: 48%;"><canvas id="chart3"></canvas></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-error-bars@2.0.1/build/plugin.min.js"></script>
 <script>
     const chartData = {
         'Tasks where instruction and latent steering are equivalent': {
@@ -161,6 +162,12 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
                 'Best latent method': [0.5, 0.48, 0.65, 0.48, 0.5, 0.68, 0.75],
                 'Instruction-only': [0.5, 0.52, 0.6, 0.52, 0.52, 0.7, 0.8],
                 'InstABoost': [0.85, 0.68, 0.9, 0.62, 0.55, 0.7, 0.9]
+            },
+            errorBars: {
+                'None': {plus: [0.0, 0.14, 0.04, 0.04, 0.1, 0.1, 0.16], minus: [0.0, 0.02, 0.02, 0.03, 0.09, 0.1, 0.16]},
+                'Best latent method': {plus: [0.14, 0.16, 0.12, 0.1, 0.1, 0.09, 0.12], minus: [0.14, 0.16, 0.12, 0.1, 0.1, 0.08, 0.1]},
+                'Instruction-only': {plus: [0.14, 0.24, 0.14, 0.09, 0.1, 0.09, 0.16], minus: [0.14, 0.22, 0.12, 0.1, 0.1, 0.08, 0.14]},
+                'InstABoost': {plus: [0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.14], minus: [0.08, 0.18, 0.08, 0.09, 0.09, 0.09, 0.1]}
             }
         },
         'Instruction-optimal tasks': {
@@ -170,15 +177,27 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
                 'Best latent method': [0.55, 0.42, 0.78, 0.05, 0.45],
                 'Instruction-only': [0.7, 0.95, 0.93, 1.0, 0.9],
                 'InstABoost': [0.88, 0.96, 1.0, 1.0, 0.92]
+            },
+            errorBars: {
+                'None': {plus: [0.0, 0.06, 0.08, 0.0, 0.12], minus: [0.0, 0.04, 0.06, 0.0, 0.1]},
+                'Best latent method': {plus: [0.14, 0.14, 0.12, 0.06, 0.14], minus: [0.14, 0.12, 0.12, 0.08, 0.14]},
+                'Instruction-only': {plus: [0.14, 0.04, 0.06, 0.0, 0.1], minus: [0.12, 0.02, 0.06, 0.0, 0.08]},
+                'InstABoost': {plus: [0.08, 0.04, 0.0, 0.0, 0.06], minus: [0.08, 0.06, 0.0, 0.0, 0.04]}
             }
         },
         'Latent-optimal tasks': {
-            tasks: ['AdvBench', 'Jailbreak Bench', 'Joy'],
+            tasks: ['AdvBench', 'JailbreakBench', 'Joy'],
             values: {
                 'None': [0.01, 0.02, 0.2],
                 'Best latent method': [0.8, 0.45, 0.9],
                 'Instruction-only': [0.01, 0.02, 0.38],
                 'InstABoost': [0.85, 0.66, 0.62]
+            },
+            errorBars: {
+                'None': {plus: [0.0, 0.03, 0.12], minus: [0.0, 0.02, 0.1]},
+                'Best latent method': {plus: [0.08, 0.12, 0.1], minus: [0.08, 0.12, 0.08]},
+                'Instruction-only': {plus: [0.0, 0.0, 0.14], minus: [0.0, 0.0, 0.14]},
+                'InstABoost': {plus: [0.07, 0.12, 0.14], minus: [0.07, 0.12, 0.14]}
             }
         }
     };
@@ -187,8 +206,48 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
         'None': 'rgb(220, 57, 57)',
         'Best latent method': 'rgb(107, 178, 88)',
         'Instruction-only': 'rgb(255, 159, 64)',
-        'InstABoost': 'rgb(54, 162, 235)'
+        'InstABoost': 'rgb(30, 144, 255)'  // Changed to dodger blue for better visibility
     };
+
+    // New data from CSV for the main chart
+    const mainChartData = {
+        labels: ["AdvBench", "Anger", "Disgust", "Fear", "JailbreakBench", "Joy", "Power-mcq", "Power-qa", "Sadness", "Surprise", "Toxicity", "TriviaQA", "TruthfulQA", "Wealth-mcq", "Wealth-qa"],
+        datasets: [
+            {
+                label: 'Default',
+                data: [0.0, 0.0, 0.04, 0.0, 0.0166666666666666, 0.2, 0.02, 0.06, 0.02, 0.0, 0.04, 0.52, 0.66, 0.18, 0.18],
+                backgroundColor: colors['None'],
+                errorBars: {
+                    'Default': {plus: [0.0, 0.0, 0.06, 0.0, 0.0333333333333334, 0.12, 0.14, 0.08, 0.04, 0.0, 0.0399999999999999, 0.1, 0.09, 0.18, 0.12], minus: [0.0, 0.0, 0.04, 0.0, 0.0166666666666666, 0.1, 0.02, 0.06, 0.02, 0.0, 0.03, 0.09, 0.1, 0.16, 0.1]}
+                }
+            },
+            {
+                label: 'Prompt',
+                data: [0.0, 0.7, 0.98, 0.5, 0.0, 0.38, 0.52, 0.94, 0.6, 1.0, 0.62, 0.52, 0.73, 0.82, 0.9],
+                backgroundColor: colors['Instruction-only'],
+                errorBars: {
+                    'Prompt': {plus: [0.0, 0.12, 0.02, 0.14, 0.0, 0.1404999999999995, 0.22, 0.06000000000000005, 0.1204999999999995, 0.0, 0.1, 0.1, 0.08, 0.14, 0.08], minus: [0.0, 0.14, 0.04, 0.14, 0.0, 0.14, 0.24, 0.0604999999999995, 0.14, 0.0, 0.09, 0.1, 0.09, 0.16, 0.1]}
+                }
+            },
+            {
+                label: 'Best latent',
+                data: [0.8, 0.54, 0.42, 0.5, 0.4333333333333333, 0.9, 0.48, 0.78, 0.74, 0.06, 0.48, 0.51, 0.69, 0.74, 0.44],
+                backgroundColor: colors['Best latent method'],
+                errorBars: {
+                    'Best latent': {plus: [0.08, 0.1404999999999996, 0.14, 0.14, 0.1333333333333334, 0.08, 0.16, 0.12, 0.12, 0.08, 0.1000000000000001, 0.1, 0.08, 0.1, 0.14], minus: [0.08, 0.1405000000000004, 0.12, 0.14, 0.1166666666666667, 0.1, 0.16, 0.12, 0.12, 0.06, 0.1, 0.1, 0.09, 0.12, 0.14]}
+                }
+            },
+            {
+                label: 'InstA-Boost',
+                data: [0.85, 0.88, 0.96, 0.86, 0.6666666666666666, 0.62, 0.68, 1.0, 0.9, 1.0, 0.61, 0.52, 0.69, 0.9, 0.96],
+                backgroundColor: colors['InstABoost'],
+                errorBars: {
+                    'InstA-Boost': {plus: [0.07, 0.08, 0.04, 0.08, 0.1166666666666667, 0.14, 0.18, 0.0, 0.08, 0.0, 0.09, 0.09, 0.09, 0.1, 0.04], minus: [0.07, 0.08, 0.06, 0.1, 0.1166666666666666, 0.14, 0.2, 0.0, 0.1, 0.0, 0.1, 0.1, 0.1, 0.14, 0.06]}
+                }
+            }
+        ]
+    };
+
 
     const titles = [
         '(a) Tasks where instruction and latent steering are equivalent',
@@ -206,6 +265,9 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
             label: method,
             data: subplotData.values[method],
             backgroundColor: colors[method],
+            errorBars: subplotData.errorBars ? {
+                [method]: subplotData.errorBars[method]
+            } : undefined
         }));
 
         const chart = new Chart(document.getElementById(`chart${i+1}`), {
@@ -219,22 +281,23 @@ Yes. Across a diverse benchmark of tasks -- from steering emotion and AI persona
                 plugins: {
                     title: {
                         display: true,
-                        text: titles[i]
+                        text: titles[i],
+                        font: {
+                            size: 18
+                        }
                     },
                     legend: {
-                        display: i === 0, // Only display legend for the first chart
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 20
-                        }
+                        display: i === 0, // Only show legend for the first subplot
+                        position: 'bottom'
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 1.05,
+                        min: 0,
+                        max: 1,
                         title: {
-                            display: i === 0, // Only display y-axis title for the first chart
+                            display: i === 0, // Only show y-axis title on the first subplot
                             text: 'Accuracy'
                         }
                     }

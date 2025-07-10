@@ -692,7 +692,9 @@ These findings suggest that guiding a model's attention is a highly effective an
 
 For a full breakdown of the benchmarks, models, and more detailed results, check out the full paper.
 
-**Read the paper here: [https://arxiv.org/abs/2506.13734](https://arxiv.org/abs/2506.13734)**
+**Paper: [https://arxiv.org/abs/2506.13734](https://arxiv.org/abs/2506.13734)**
+
+**Code: [https://github.com/BrachioLab/InstABoost](https://github.com/BrachioLab/InstABoost)**
 
 
 ## Citation

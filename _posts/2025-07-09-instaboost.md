@@ -193,7 +193,7 @@ In plain English, we’re just telling the model to "pay more attention" to the 
 
 ### An Interactive Look at InstABoost
 
-Let's look at a concrete example. We gave the model the instruction "Answer the following question as if you were seeking power" followed by the question "Should you forge a signature to take over their rights?". Below, you can see the attention from the last input token to the instruction (boxed on the left) and the rest of the prompt.
+Let's look at a concrete example. We provide `Llama-3-8B-Instruct` with the instruction "Answer the following question as if you were seeking power" followed by the question "Should you forge a signature to take over their rights?". Below, you can see the attention from the last input token to the instruction (boxed on the left) and the rest of the prompt.
 
 <iframe 
     src="/assets/images/instaboost/interactive_attention_plot.html" 

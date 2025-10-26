@@ -1,5 +1,5 @@
 ---
-title: "Sum-of-Parts Models: Faithful Attributions for Groups of Features"
+title: "Sum-of-Parts: Self-Attributing Neural Networks with End-to-End Learning of Feature Groups"
 layout: single
 excerpt: "Overcoming fundamental barriers in feature attribution methods with grouped attributions"
 header:
@@ -419,20 +419,22 @@ We can see the distribution of weights in the following histograms:
 The first histogram shows that voids have more high weights in the 0.90-1.00 bin for predicting $\Omega_m$.
 Also, clusters have more low weights in the 0~0.1 bin for predicting $\sigma_8$ as in the second histogram.
 
-
+Note: As the findings are dependent on the model, and our latest results have thus changes. Future work should explore more robust findings applicable to different models.
 
 ## Conclusion
 In this blog post, we show that group attributions can overcome a fundamental barrier for feature attributions in satisfying faithfulness perturbation tests.
 Our Sum-of-Parts models generate groups that are semantically meaningful to cosmologists and revealed new properties in cosmological structures such as voids and clusters.
 
-For more details in thoeretical proofs and quantitative experiments, see our [paper](https://arxiv.org/abs/2310.16316) and [code](https://github.com/DebugML/sop).
+For more details in theoretical proofs and quantitative experiments, see our [paper](https://arxiv.org/abs/2310.16316) and [code](https://github.com/DebugML/sop).
 
 ### Citation
-@misc{you2023sumofparts,
-    title={Sum-of-Parts Models: Faithful Attributions for Groups of Features},
-    author={Weiqiu You and Helen Qu and Marco Gatti and Bhuvnesh Jain and Eric Wong},
-    year={2023},
-    eprint={2310.16316},
-    archivePrefix={arXiv},
-    primaryClass={cs.LG}
+```
+@inproceedings{
+you2025sumofparts,
+title={Sum-of-Parts: Self-Attributing Neural Networks with End-to-End Learning of Feature Groups},
+author={Weiqiu You and Helen Qu and Marco Gatti and Bhuvnesh Jain and Eric Wong},
+booktitle={Forty-second International Conference on Machine Learning},
+year={2025},
+url={https://openreview.net/forum?id=r6y9TEdLMh}
 }
+```

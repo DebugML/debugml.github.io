@@ -927,18 +927,18 @@ We present our results in the tables below, divided by "custom" tasks (HWF, leaf
             </tr>
             <tr>
                 <th>REINFORCE</th>
-                <td>18.59</td>
-                <td>23.60</td>
-                <td>34.02</td>
-                <td>47.07</td>
+                <td>88.27</td>
+                <td>40.24</td>
+                <td>53.84</td>
+                <td>12.17</td>
                 <td>79.08</td>
             </tr>
             <tr>
                 <th>IndeCateR</th>
-                <td>15.14</td>
-                <td>40.38</td>
-                <td>52.67</td>
-                <td>12.28</td>
+                <td>95.08</td>
+                <td>78.71</td>
+                <td>69.16</td>
+                <td>12.72</td>
                 <td>66.50</td>
             </tr>
             <tr>

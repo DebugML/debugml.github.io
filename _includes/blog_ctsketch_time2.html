@@ -1,0 +1,124 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  fetch('../assets/other/ctsketch/add100.json')
+    .then(response => response.json())
+    .then(data => {
+
+      let timeData = data;
+
+      // Function to generate datasets
+      function generateDatasets(data) {
+        const colors = {
+          'ctsketch': '#82B366', // Blue
+          'anesi': '#D6B656', // Orange
+          'indecater': '#408bcf'
+        };
+
+        const datasets = data.flatMap(datum => {
+          const mainData = datum.x.map((x, i) => ({ x: x, y: datum.y[i], y_err: datum.y_err ? datum.y_err[i] : 0 }));
+          const upperBoundData = mainData.map(point => ({ x: point.x, y: point.y + point.y_err }));
+          const lowerBoundData = mainData.map(point => ({ x: point.x, y: point.y - point.y_err }));
+
+          return [
+            {
+              label: `${datum.caption} (Upper Bound)`,
+              data: upperBoundData,
+              borderColor: colors[datum.type],
+              backgroundColor: colors[datum.type] + '33', // Transparent background
+              borderWidth: 1,
+              fill: '+1', // Fill between this dataset and the previous one
+              pointRadius: 0, // Hide points
+              order: 1,
+              showLine: true, // Show line for upper bound
+              datasetLabel: datum.caption
+            },
+            {
+              label: datum.caption,
+              data: mainData,
+              borderColor: colors[datum.type],
+              backgroundColor: 'rgba(0,0,0,0)', // Transparent background
+              borderWidth: 2,
+              fill: '-1',
+              showLine: true, // To draw the line between points
+              order: 2,
+              datasetLabel: datum.caption
+            },
+            {
+              label: `${datum.caption} (Lower Bound)`,
+              data: lowerBoundData,
+              borderColor: colors[datum.type],
+              backgroundColor: colors[datum.type] + '33', // Transparent background
+              borderWidth: 1,
+              fill: '-1', // Fill between this dataset and the upper bound
+              pointRadius: 0, // Hide points
+              order: 1,
+              showLine: true, // Show line for lower bound
+              datasetLabel: datum.caption
+            },
+          ];
+        });
+
+        return datasets;
+      }
+
+      const timeCtx = document.getElementById('add100-canvas').getContext('2d');
+      const timeChart = new Chart(timeCtx, {
+        type: 'scatter',
+        data: {
+          datasets: generateDatasets(timeData)
+        },
+        options: {
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom',
+              title: {
+                display: true,
+                text: 'Time (s)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Accuracy'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const dataPoint = context.raw;
+                  return context.dataset.label.includes('Bound') ? '' : `${context.dataset.label}: (${dataPoint.x}, ${dataPoint.y}) ± ${dataPoint.y_err}`;
+                }
+              }
+            },
+            legend: {
+              display: true,
+              labels: {
+                filter: function (legendItem, chartData) {
+                  return !legendItem.text.includes('Bound');
+                }
+              },
+              onClick: function (e, legendItem, legend) {
+                // Prevent the default behavior of hiding datasets
+              }
+            },
+            title: {
+              display: true,
+              text: 'Accuracy vs. Time for add-100',
+              font: {
+                size: 18
+              },
+              padding: {
+                top: 10,
+                bottom: 10
+              }
+            }
+          }
+        }
+      });
+    });
+</script>
+
+<canvas id="add100-canvas"></canvas>

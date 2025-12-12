@@ -1,0 +1,132 @@
+{% assign uid = include.id | default: 'toggle-multi' %}
+{% assign auto_ms = include.auto_ms | default: 5000 %}
+{% assign resume_ms = include.resume_ms | default: 10000 %}
+{% assign default_label = include.default_label | default: 'COCO' %}
+
+<figure id="{{ uid }}" style="max-width:1000px;margin:1.5rem auto;text-align:center" aria-labelledby="{{ uid }}-caption">
+
+  <!-- Dataset label -->
+  <div style="font-size:.85rem;color:#666;margin-bottom:.35rem;">Datasets — click to see an example</div>
+
+  <!-- Dataset tabs -->
+  <div id="{{ uid }}-ds-tabs" style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:.9rem;">
+    {% assign ds_btn_base = "padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;" %}
+    {% for i in (1..6) %}
+      {% capture lbl %}dataset{{ i }}_label{% endcapture %}
+      {% capture raw %}dataset{{ i }}_raw{% endcapture %}
+      {% capture sup %}dataset{{ i }}_super{% endcapture %}
+      {% if include[lbl] %}
+      <button type="button" data-role="ds"
+              data-label="{{ include[lbl] | escape }}"
+              data-raw="{{ include[raw] | relative_url }}"
+              data-super="{{ include[sup] | relative_url }}"
+              aria-selected="false"
+              style="{{ ds_btn_base }}">
+        {{ include[lbl] }}
+      </button>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Figure area -->
+  <div id="{{ uid }}-figbox"
+       style="position:relative;background:#fafafa;border:1px solid #eee;border-radius:.6rem;padding:.5rem;overflow:hidden;display:inline-block;">
+    <img id="{{ uid }}-imgA" alt="Raw Concept Activations"
+         style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:.5rem" loading="lazy">
+    <img id="{{ uid }}-imgB" alt="+ SuperActivators"
+         style="display:none;max-width:100%;height:auto;margin:0 auto;border-radius:.5rem" loading="lazy">
+
+    <!-- Embedded segmented toggle -->
+    <div style="position:absolute;left:50%;bottom:.5rem;transform:translateX(-50%);display:flex;justify-content:center;pointer-events:none;">
+      <div id="{{ uid }}-seg"
+           style="display:flex;align-items:stretch;border:1px solid #ccc;border-radius:.4rem;overflow:hidden;background:rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(0,0,0,.1);">
+        <button id="{{ uid }}-btnA" type="button"
+                style="padding:.25rem .5rem;border:none;background:#eef2ff;font-weight:600;cursor:pointer;font-size:.8rem;pointer-events:auto;white-space:nowrap;">
+          Raw Concept Activations
+        </button>
+        <button id="{{ uid }}-btnB" type="button"
+                style="padding:.25rem .5rem;border:none;border-left:1px solid #ccc;background:#ffffff;font-weight:600;cursor:pointer;font-size:.8rem;pointer-events:auto;white-space:nowrap;">
+          + SuperActivators
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- <figcaption id="{{ uid }}-caption" style="margin-top:.6rem;font-size:.95rem;color:#555;">
+    {{ include.caption | default: 'Caption'}}
+  </figcaption> -->
+
+  <script>
+  (function(){
+    const root = document.getElementById('{{ uid }}');
+    const box = document.getElementById('{{ uid }}-figbox');
+    const dsTabs = Array.from(root.querySelectorAll('[data-role="ds"]'));
+    const imgA = document.getElementById('{{ uid }}-imgA');
+    const imgB = document.getElementById('{{ uid }}-imgB');
+    const btnA = document.getElementById('{{ uid }}-btnA');
+    const btnB = document.getElementById('{{ uid }}-btnB');
+
+    const AUTO_MS = Number('{{ auto_ms }}') || 5000;
+    const RESUME_MS = Number('{{ resume_ms }}') || 10000;
+    const DEFAULT_LABEL = '{{ default_label }}'.trim().toLowerCase();
+
+    const LIME = '#d8f6b3';
+    let currentView = 'A', autoTimer=null;
+
+    /* Resize background to fit largest loaded image plus buffer for toggles */
+    function adjustHeight() {
+      const h = Math.max(imgA.clientHeight, imgB.clientHeight);
+      const buffer = 60; // extra space below for the toggle bar
+      box.style.height = h ? (h + buffer) + 'px' : 'auto';
+    }
+
+    function setViewStyles(aActive){
+      if(aActive){
+        btnA.style.background = '#eef2ff';
+        btnB.style.background = '#ffffff';
+      } else {
+        btnA.style.background = '#ffffff';
+        btnB.style.background = LIME;
+      }
+    }
+
+    function show(which){
+      currentView = which;
+      if(which==='A'){ imgA.style.display='block'; imgB.style.display='none'; setViewStyles(true);}
+      else { imgA.style.display='none'; imgB.style.display='block'; setViewStyles(false);}
+      adjustHeight();
+    }
+
+    function startAuto(){ stopAuto(); autoTimer=setInterval(()=>show(currentView==='A'?'B':'A'),AUTO_MS);}
+    function stopAuto(){ if(autoTimer){clearInterval(autoTimer);autoTimer=null;} }
+    function pauseAndShow(w){ stopAuto(); show(w); setTimeout(startAuto,RESUME_MS); }
+
+    function highlightTab(active){
+      dsTabs.forEach(t=>{
+        t.style.background=t===active?'#eef2ff':'#f9fafb';
+        t.style.fontWeight=t===active?'600':'500';
+      });
+    }
+
+    function switchDataset(tab){
+      const raw=tab.getAttribute('data-raw'), sup=tab.getAttribute('data-super');
+      if(!raw||!sup)return;
+      highlightTab(tab);
+      imgA.src=raw; imgB.src=sup;
+      const pre=new Image(); pre.src=(currentView==='A')?sup:raw;
+      show('A'); startAuto();
+      imgA.onload=imgB.onload=adjustHeight;
+    }
+
+    btnA.onclick=()=>pauseAndShow('A');
+    btnB.onclick=()=>pauseAndShow('B');
+    dsTabs.forEach(t=>t.onclick=()=>switchDataset(t));
+
+    let def=dsTabs.find(t=>(t.getAttribute('data-label')||'').trim().toLowerCase()===DEFAULT_LABEL);
+    if(!def)def=dsTabs[0];
+    if(def)switchDataset(def);
+    window.addEventListener('resize', adjustHeight);
+  })();
+  </script>
+</figure>
+

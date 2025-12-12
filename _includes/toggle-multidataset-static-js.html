@@ -1,0 +1,83 @@
+{% assign uid = include.id | default: 'toggle-multi-static' %}
+{% assign default_label = include.default_label | default: '' %}
+
+<figure id="{{ uid }}" style="max-width:1000px;margin:1.5rem auto;text-align:center">
+
+  <!-- Dataset label -->
+  <div style="font-size:.85rem;color:#666;margin-bottom:.35rem;">
+    Datasets — click between plots
+  </div>
+
+  <!-- Dataset tabs -->
+  <div id="{{ uid }}-ds-tabs"
+       style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:.9rem;">
+    {% assign ds_btn_base = "padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;" %}
+    {% for i in (1..10) %}
+      {% capture lbl %}dataset{{ i }}_label{% endcapture %}
+      {% capture img %}dataset{{ i }}_img{% endcapture %}
+      {% if include[lbl] and include[img] %}
+        <button type="button"
+                data-role="ds"
+                data-label="{{ include[lbl] | escape }}"
+                data-img="{{ include[img] | relative_url }}"
+                aria-selected="false"
+                style="{{ ds_btn_base }}">
+          {{ include[lbl] }}
+        </button>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Figure area -->
+  <div style="background:#fafafa;border:1px solid #eee;border-radius:.6rem;padding:.5rem;display:inline-block;">
+    <img id="{{ uid }}-img"
+         alt="{{ include.alt | default: 'Dataset example' }}"
+         style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:.5rem"
+         loading="lazy">
+  </div>
+
+  {% if include.caption %}
+    <figcaption style="margin-top:.6rem;font-size:.95rem;color:#555;">
+      {{ include.caption }}
+    </figcaption>
+  {% endif %}
+
+  <script>
+  (function(){
+    const root = document.getElementById('{{ uid }}');
+    if (!root) return;
+
+    const img = document.getElementById('{{ uid }}-img');
+    const tabs = Array.from(root.querySelectorAll('[data-role="ds"]'));
+    const DEFAULT_LABEL = '{{ default_label | downcase }}'.trim();
+
+    if (!img || !tabs.length) return;
+
+    function highlight(active) {
+      tabs.forEach(t => {
+        const isActive = t === active;
+        t.style.background = isActive ? '#eef2ff' : '#f9fafb';
+        t.style.fontWeight = isActive ? '600' : '500';
+        t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+    }
+
+    function switchDataset(tab) {
+      if (!tab) return;
+      const src = tab.getAttribute('data-img');
+      if (!src) return;
+      img.src = src;
+      highlight(tab);
+    }
+
+    tabs.forEach(t => {
+      t.addEventListener('click', () => switchDataset(t));
+    });
+
+    let def = tabs.find(t => (t.getAttribute('data-label') || '').trim().toLowerCase() === DEFAULT_LABEL);
+    if (!def) def = tabs[0];
+    switchDataset(def);
+  })();
+  </script>
+</figure>
+

@@ -595,3 +595,19 @@ Vitoria Guardieiro:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/viguardieiro"
+
+Cassandra Goldberg:
+  name    : "Cassandra Goldberg"
+  avatar  : "/assets/images/avatar/casey.jpeg"
+  bio     : "PhD Student at UPenn"
+  home    : "https://cassandra-goldberg.github.io/"
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:cgoldber@seas.upenn.edu"
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://cassandra-goldberg.github.io/"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/cassandra-goldberg"

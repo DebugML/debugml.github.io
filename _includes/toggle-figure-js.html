@@ -1,0 +1,88 @@
+{% assign uid = include.id | default: 'toggle1' %}
+
+<figure id="{{ uid }}" style="max-width:900px;margin:1.5rem auto;text-align:center" aria-labelledby="{{ uid }}-caption">
+  <!-- Images -->
+  <div>
+    <img id="{{ uid }}-imgA"
+         src="{{ include.src_a | relative_url }}"
+         alt="{{ include.alt_a | default: 'Raw Activations' }}"
+         style="display:block;max-width:100%;height:auto;margin:0 auto;border-radius:.5rem;"
+         loading="lazy" decoding="async">
+
+    <img id="{{ uid }}-imgB"
+         src="{{ include.src_b | relative_url }}"
+         alt="{{ include.alt_b | default: 'With SuperActivators' }}"
+         style="display:none;max-width:100%;height:auto;margin:0 auto;border-radius:.5rem;"
+         loading="lazy" decoding="async">
+  </div>
+
+  <!-- Caption -->
+  <figcaption id="{{ uid }}-caption" style="margin-top:.75rem;font-size:.95rem;color:#555;">
+    {{ include.caption | default: 'Toggle between raw activations and SuperActivator visualizations.' }}
+  </figcaption>
+
+  <!-- Toggles BELOW the image -->
+  <div role="tablist" aria-label="Select view"
+       style="display:inline-flex;gap:.5rem;border:1px solid #ddd;border-radius:.6rem;padding:.25rem;margin-top:.75rem;">
+    <button id="{{ uid }}-btnA" type="button"
+            style="padding:.35rem .85rem;border-radius:.45rem;cursor:pointer;font-weight:600;">
+      Raw Activations
+    </button>
+    <button id="{{ uid }}-btnB" type="button"
+            style="padding:.35rem .85rem;border-radius:.45rem;cursor:pointer;">
+      With SuperActivators
+    </button>
+  </div>
+
+  <script>
+  (function(){
+    const a = document.getElementById('{{ uid }}-imgA');
+    const b = document.getElementById('{{ uid }}-imgB');
+    const ba = document.getElementById('{{ uid }}-btnA');
+    const bb = document.getElementById('{{ uid }}-btnB');
+    let current = 'A';
+    let autoToggle;
+
+    function show(which){
+      current = which;
+      if(which === 'A'){
+        a.style.display = 'block';
+        b.style.display = 'none';
+        ba.style.fontWeight = '600';
+        bb.style.fontWeight = '400';
+        ba.style.background = '#f8f8f8';
+        bb.style.background = '#fff';
+      } else {
+        a.style.display = 'none';
+        b.style.display = 'block';
+        ba.style.fontWeight = '400';
+        bb.style.fontWeight = '600';
+        ba.style.background = '#fff';
+        bb.style.background = '#f8f8f8';
+      }
+    }
+
+    function startAutoToggle(){
+      autoToggle = setInterval(() => {
+        show(current === 'A' ? 'B' : 'A');
+      }, 4000); // ← change 5000 to number of milliseconds you want
+    }
+
+    // Manual controls stop auto-toggle for 10 seconds, then resume
+    function pauseAndShow(which){
+      clearInterval(autoToggle);
+      show(which);
+      setTimeout(startAutoToggle, 10000);
+    }
+
+    ba.addEventListener('click', () => pauseAndShow('A'));
+    bb.addEventListener('click', () => pauseAndShow('B'));
+
+    show('A');
+    startAutoToggle();
+  })();
+  </script>
+</figure>
+
+
+

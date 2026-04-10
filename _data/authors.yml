@@ -586,6 +586,9 @@ Davis Brown:
   bio              : "PhD Student at UPenn"
   home             : https://davisrbrown.com
   links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:davisrbr@seas.upenn.edu"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://davisrbrown.com"

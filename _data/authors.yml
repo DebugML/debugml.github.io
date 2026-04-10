@@ -580,6 +580,22 @@ Lyle Ungar:
       icon: "fas fa-fw fa-link"
       url: "https://www.cis.upenn.edu/~ungar/"
 
+Davis Brown:
+  name             : "Davis Brown"
+  avatar           : "/assets/images/avatar/davis.jpeg"
+  bio              : "PhD Student at UPenn"
+  home             : https://davisrbrown.com
+  links:
+    - label: "Website"
+      icon: "fas fa-fw fa-link"
+      url: "https://davisrbrown.com"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://x.com/davisbrownr"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/davisrbr"
+
 Vitoria Guardieiro:
   name    : "Vitoria Guardieiro"
   avatar  : "/assets/images/avatar/vitoriag.png"

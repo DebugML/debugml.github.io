@@ -29,7 +29,7 @@
       {% if author_data[1] == 'equal' %}{% assign has_equal = true %}{% endif %}
     {% endfor %}
     {% if has_equal %}
-    <br/><span style="font-size: 0.85em; font-style: italic;">*Equal contribution</span>
+    <br/><span style="font-size: 0.85em; font-style: italic;">*Equal contribution. Order decided by coinflip</span>
     {% endif %}
     {% if document.show_date and document.date %}
       {% assign date = document.date %}

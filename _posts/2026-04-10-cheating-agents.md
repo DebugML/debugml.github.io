@@ -126,7 +126,7 @@ On CyBench, 16 of 464 successful traces (3.4%) solved CTF challenges by download
 
 ### Mining git history (SWE-bench)
 
-On SWE-bench and SWE-rebench, 17 traces across 3 scaffold types showed agents finding the fix commit via `git log` and copying the historical patch. As one Qwen3-Coder trace put it: "There's a commit 020c195... that seems very relevant. Perfect! So this commit already implemented the fix I need to make." This type of cheating has recently been [discovered and fixed on SWE-bench](https://github.com/SWE-bench/SWE-bench/issues/465){:target="_blank"}, but we recover the issue without any human intervention and find it on SWE-rebench as well.
+On SWE-bench and SWE-rebench, 17 traces across 3 scaffold types showed agents finding the fix commit via `git log` and copying the historical patch. As one Qwen3-Coder trace put it: "There's a commit 020c195... that seems very relevant. Perfect! So this commit already implemented the fix I need to make." This type of cheating has recently been [discovered and patched on SWE-bench](https://github.com/SWE-bench/SWE-bench/issues/465){:target="_blank"}, and affected leaderboard entries have been re-evaluated, but we recover the issue without any human intervention and find it on SWE-rebench as well.
 
 <figure class="transcript-figure">
   <img src="/assets/images/cheating_agents/05_swebench_git.png" alt="Transcript: Agent mines git history to find and copy the fix commit." />

@@ -168,3 +168,15 @@ The true prevalence of cheating in real evaluations is unknown, despite work on 
 Finding cheating at scale is hard for three reasons. First, the evidence is often spread across multiple traces rather than visible in any single one. Second, this is a sparse retrieval problem, where the cheating traces are buried among hundreds of benign runs. Third, cheating behavior is often adversarially disguised and so looks like real work. Our approach, Meerkat, addresses this by first organizing traces with clustering, so that related behaviors end up near each other and large benign regions can be skipped. We then use an LLM agent (in the cases discussed here, Opus 4.6) to search for groups of traces that have suspicious behavior. This lets it scalably find patterns that per-trace monitors miss.
 
 Widespread cheating [calls for](https://www.nist.gov/caisi/cheating-ai-agent-evaluations){:target="_blank"} evaluations designed with clear rules and access controls for both the agent and developer. It also requires large-scale auditing and transcript analysis, where the use of agents to supervise other agents becomes important as benchmarks grow in scale and complexity.
+
+## Citation
+
+```bibtex
+@article{
+stein2026detecting,
+title={Detecting Safety Violations Across Many Agent Traces},
+author={Adam Stein and Davis Brown and Hamed Hassani and Mayur Naik and Eric Wong},
+year={2026},
+url={https://debugml.github.io/cheating-agents/}
+}
+```

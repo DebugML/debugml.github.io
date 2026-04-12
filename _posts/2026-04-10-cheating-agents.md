@@ -177,6 +177,6 @@ stein2026detecting,
 title={Detecting Safety Violations Across Many Agent Traces},
 author={Adam Stein and Davis Brown and Hamed Hassani and Mayur Naik and Eric Wong},
 year={2026},
-url={https://debugml.github.io/cheating-agents/}
+url={https://debugml.github.io/assets/agentic_safety_testing.pdf}
 }
 ```

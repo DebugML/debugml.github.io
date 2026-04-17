@@ -9,7 +9,7 @@ header:
   teaser: /assets/images/cheating_agents/cheating_matrix_v4_dotplot.png
   actions:
     - label: "Paper"
-      url: /assets/agentic_safety_testing.pdf
+      url: https://arxiv.org/abs/2604.11806
     - label: "Code"
       url: https://github.com/BrachioLab/Meerkat
 authors:
@@ -66,7 +66,7 @@ More broadly, we find that agentic cheating is widespread, affecting thousands o
 
 Harness-level cheating is not always intentional cheating by the developer, but can be a kind of "meta" reward hacking. We believe the coding agents used by the developer to build the scaffold are themselves cheating when attempting to design a harness to get good benchmark performance. This is especially likely for the cheating in Terminal-Bench, where many of the developers publicly discuss vibecoding their harnesses. We think harness-level cheating will be an even greater problem as [autoresearch](https://x.com/karpathy/status/2031135152349524125){:target="_blank"} gets adopted.
 
-Below, we provide examples found by Meerkat and discuss takeaways. For more detail on our approach, see our [paper](/assets/agentic_safety_testing.pdf){:target="_blank"}.
+Below, we provide examples found by Meerkat and discuss takeaways. For more detail on our approach, see our [paper](https://arxiv.org/abs/2604.11806){:target="_blank"}.
 
 
 ## Harness-Level Cheating
@@ -177,7 +177,7 @@ stein2026detecting,
 title={Detecting Safety Violations Across Many Agent Traces},
 author={Adam Stein and Davis Brown and Hamed Hassani and Mayur Naik and Eric Wong},
 year={2026},
-url={https://debugml.github.io/assets/agentic_safety_testing.pdf}
+url={https://arxiv.org/abs/2604.11806}
 }
 ```
 

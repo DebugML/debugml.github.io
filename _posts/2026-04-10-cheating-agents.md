@@ -62,7 +62,7 @@ Unfortunately, we find that the top three submissions to Terminal-Bench 2 are gu
 More broadly, we find that agentic cheating is widespread, affecting thousands of submitted agent runs on 28+ submissions across 9 different benchmarks. Our system for finding violations, [Meerkat](https://github.com/BrachioLab/Meerkat){:target="_blank"}, uses agentic search and clustering to scale auditing for cheating to thousands of traces (see the [takeaways](#takeaways) at the end for further discussion on how Meerkat works). We use it to find strong evidence for the following:
 
 1. **The top three Terminal-Bench-2 agents and the top HAL USACO submission commit *harness-level cheating***, where the agent harness sneaks the correct answer to the model. This cheating spans over 1,000 traces and 12+ frontier models.
-2. **Task-level cheating,** where the task is gamed or shortcutted by the model itself. For example, agents hack evaluations by overwriting test cases or simply looking up the solution online. We find 39 confirmed instances across 6 benchmarks, roughly 4x more than previous estimates.
+2. **Task-level cheating,** where the task is gamed or shortcutted by the model itself. For example, agents hack evaluations by overwriting test cases or simply looking up the solution online. We find 28 confirmed instances across 6 benchmarks, roughly 3x more than previous estimates.\*
 
 Harness-level cheating is not always intentional cheating by the developer, but can be a kind of "meta" reward hacking. We believe the coding agents used by the developer to build the scaffold are themselves cheating when attempting to design a harness to get good benchmark performance. This is especially likely for the cheating in Terminal-Bench, where many of the developers publicly discuss vibecoding their harnesses. We think harness-level cheating will be an even greater problem as [autoresearch](https://x.com/karpathy/status/2031135152349524125){:target="_blank"} gets adopted.
 
@@ -116,7 +116,7 @@ Across 307 problems, 107 had the full exact `Solution Code` block inserted into 
 
 ## Task-Level Cheating
 
-Task-level cheating is when the agent itself finds a way to satisfy the evaluator without doing the intended task. Prior audits focused here, but we find it is more pervasive than previously reported: 39 confirmed traces across 6 benchmarks.
+Task-level cheating is when the agent itself finds a way to satisfy the evaluator without doing the intended task. Prior audits focused here, but we find it is more pervasive than previously reported: 28 confirmed traces across 6 benchmarks.
 
 ### Googling answers (CyBench)
 
@@ -128,7 +128,7 @@ On CyBench, 16 of 464 successful traces (3.4%) solved CTF challenges by download
 
 ### Mining git history (SWE-bench)
 
-On SWE-bench and SWE-rebench, 17 traces across 3 scaffold types showed agents finding the fix commit via `git log` and copying the historical patch. As one Qwen3-Coder trace put it: "There's a commit 020c195... that seems very relevant. Perfect! So this commit already implemented the fix I need to make." This type of cheating has recently been [discovered and patched on SWE-bench](https://github.com/SWE-bench/SWE-bench/issues/465){:target="_blank"}, and affected leaderboard entries have been re-evaluated, but we recover the issue without any human intervention and find it on SWE-rebench as well.
+On SWE-bench and SWE-rebench, 6 traces across 3 scaffold types showed agents finding the fix commit via `git log` and copying the historical patch. As one Qwen3-Coder trace put it: "There's a commit 020c195... that seems very relevant. Perfect! So this commit already implemented the fix I need to make." This type of cheating has recently been [discovered and patched on SWE-bench](https://github.com/SWE-bench/SWE-bench/issues/465){:target="_blank"}, and affected leaderboard entries have been re-evaluated, but we recover the issue without any human intervention and find it on SWE-rebench as well.
 
 <figure class="transcript-figure">
   <img src="/assets/images/cheating_agents/05_swebench_git.png" alt="Transcript: Agent mines git history to find and copy the fix commit." />
@@ -180,3 +180,7 @@ year={2026},
 url={https://debugml.github.io/assets/agentic_safety_testing.pdf}
 }
 ```
+
+---
+
+<sub>\*An earlier version of this post reported higher task-level counts (17 instances of git-history cheating across SWE-bench and SWE-rebench). We lowered these numbers after additional auditing.</sub>

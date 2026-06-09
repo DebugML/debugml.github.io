@@ -1,0 +1,361 @@
+{% assign inversion_metrics_json = "/assets/other/superactivators/coco_inversion_metrics.json" | relative_url %}
+<figure id="superactivators-inversion-chart"
+        style="max-width:1200px;margin:1.5rem auto;text-align:center">
+  <div class="inversion-chart-shell">
+    <div id="coco-inversion-chart"></div>
+  </div>
+  <figcaption style="margin-top:.6rem;font-size:.95rem;color:#555;line-height:1.4;">
+    Accuracy and faithfulness comparisons for LLaMA-3.2-11B-Vision-Instruct linear separator concepts and SuperActivators.
+  </figcaption>
+</figure>
+
+<style>
+  #superactivators-inversion-chart .inversion-chart-shell {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+  #superactivators-inversion-chart .inversion-chart-root {
+    width: 100%;
+  }
+  #superactivators-inversion-chart .inversion-chart-legend {
+    display: inline-flex;
+    justify-content: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    margin: 0 auto .55rem;
+    padding: .32rem .6rem;
+    border: 1px solid #d0d7de;
+    border-radius: .35rem;
+    background: transparent;
+    font: 600 15px Verdana, Geneva, sans-serif;
+    color: #111111;
+  }
+  #superactivators-inversion-chart .inversion-chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  #superactivators-inversion-chart .inversion-chart-legend-swatch {
+    width: 28px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  #superactivators-inversion-chart .inversion-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+  #superactivators-inversion-chart .inversion-chart-panel {
+    height: 255px;
+  }
+  @media (max-width: 900px) {
+    #superactivators-inversion-chart .inversion-chart-grid {
+      grid-template-columns: 1fr;
+    }
+    #superactivators-inversion-chart .inversion-chart-panel {
+      height: 230px;
+    }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const target = document.getElementById("coco-inversion-chart");
+  if (!target) return;
+
+  const DEFAULT_COLORS = {
+    concept: "cornflowerblue",
+    super: "limegreen"
+  };
+
+  function formatValue(value) {
+    return Number(value).toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  const errorBarPlugin = {
+    id: "superactivatorsInversionErrorBars",
+    afterDatasetsDraw(chart) {
+      const yScale = chart.scales.y;
+
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (!meta || meta.hidden) return;
+
+        meta.data.forEach((bar, index) => {
+          const point = dataset.data[index];
+          const err = point && typeof point.err === "number" ? point.err : 0;
+
+          const errorColor = datasetIndex === 0 ? "#003366" : "#006400";
+
+          chart.ctx.save();
+          chart.ctx.strokeStyle = errorColor;
+          chart.ctx.fillStyle = errorColor;
+          chart.ctx.lineWidth = 1.25;
+
+          if (!err) {
+            chart.ctx.beginPath();
+            chart.ctx.moveTo(bar.x - 5, bar.y);
+            chart.ctx.lineTo(bar.x + 5, bar.y);
+            chart.ctx.stroke();
+            chart.ctx.restore();
+            return;
+          }
+
+          const topY = yScale.getPixelForValue(point.y + err);
+          const bottomY = yScale.getPixelForValue(point.y - err);
+          const capWidth = 5;
+
+          chart.ctx.beginPath();
+          chart.ctx.moveTo(bar.x, topY);
+          chart.ctx.lineTo(bar.x, bottomY);
+          chart.ctx.moveTo(bar.x - capWidth, topY);
+          chart.ctx.lineTo(bar.x + capWidth, topY);
+          chart.ctx.moveTo(bar.x - capWidth, bottomY);
+          chart.ctx.lineTo(bar.x + capWidth, bottomY);
+          chart.ctx.stroke();
+          chart.ctx.restore();
+        });
+      });
+    }
+  };
+
+  const groupedBarTickPlugin = {
+    id: "superactivatorsGroupedBarTicks",
+    afterDraw(chart) {
+      const xScale = chart.scales.x;
+      const conceptMeta = chart.getDatasetMeta(0);
+      const superMeta = chart.getDatasetMeta(1);
+      const tickLength = 4;
+
+      if (!xScale || !conceptMeta || !superMeta) return;
+
+      chart.ctx.save();
+      chart.ctx.strokeStyle = "#222222";
+      chart.ctx.lineWidth = 1;
+      chart.ctx.beginPath();
+
+      const tickCount = Math.max(conceptMeta.data.length, superMeta.data.length);
+      for (let index = 0; index < tickCount; index += 1) {
+        const conceptBar = conceptMeta.data[index];
+        const superBar = superMeta.data[index];
+        const x = conceptBar && superBar
+          ? (conceptBar.x + superBar.x) / 2
+          : conceptBar
+            ? conceptBar.x
+            : superBar && superBar.x;
+
+        if (typeof x !== "number") continue;
+        chart.ctx.moveTo(x, xScale.top);
+        chart.ctx.lineTo(x, xScale.top + tickLength);
+      }
+
+      chart.ctx.stroke();
+      chart.ctx.restore();
+    }
+  };
+
+  function buildLegend(root, data) {
+    const legend = document.createElement("div");
+    legend.className = "inversion-chart-legend";
+
+    [
+      {
+        label: data.legend.conceptLabel,
+        color: data.legend.conceptColor || DEFAULT_COLORS.concept
+      },
+      {
+        label: data.legend.superLabel,
+        color: data.legend.superColor || DEFAULT_COLORS.super
+      }
+    ].forEach((item) => {
+      const entry = document.createElement("div");
+      entry.className = "inversion-chart-legend-item";
+
+      const swatch = document.createElement("span");
+      swatch.className = "inversion-chart-legend-swatch";
+      swatch.style.background = item.color;
+
+      const label = document.createElement("span");
+      label.textContent = item.label;
+
+      entry.appendChild(swatch);
+      entry.appendChild(label);
+      legend.appendChild(entry);
+    });
+
+    root.appendChild(legend);
+  }
+
+  function buildCanvasGrid(root, metrics) {
+    const grid = document.createElement("div");
+    grid.className = "inversion-chart-grid";
+
+    const canvases = metrics.map((metric) => {
+      const panel = document.createElement("div");
+      panel.className = "inversion-chart-panel";
+
+      const canvas = document.createElement("canvas");
+      canvas.dataset.metricKey = metric.key;
+
+      panel.appendChild(canvas);
+      grid.appendChild(panel);
+      return canvas;
+    });
+
+    root.appendChild(grid);
+    return canvases;
+  }
+
+  function metricTitle(metric) {
+    return metric.direction === "down"
+      ? metric.title + " (\u2193)"
+      : metric.title + " (\u2191)";
+  }
+
+  function seriesData(points, labels) {
+    return points.map((point, index) => ({
+      x: labels[index],
+      y: point.y,
+      err: typeof point.err === "number" ? point.err : 0
+    }));
+  }
+
+  function buildChartConfig(metric, labels, legend) {
+    return {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: legend.conceptLabel,
+            data: seriesData(metric.concept, labels),
+            backgroundColor: legend.conceptColor || DEFAULT_COLORS.concept,
+            borderWidth: 0,
+            categoryPercentage: .72,
+            barPercentage: 1
+          },
+          {
+            label: legend.superLabel,
+            data: seriesData(metric.super, labels),
+            backgroundColor: legend.superColor || DEFAULT_COLORS.super,
+            borderWidth: 0,
+            categoryPercentage: .72,
+            barPercentage: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        parsing: {
+          xAxisKey: "x",
+          yAxisKey: "y"
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label(context) {
+                const raw = context.raw || {};
+                const value = typeof raw.y === "number" ? raw.y : context.parsed.y;
+                const err = typeof raw.err === "number" ? raw.err : 0;
+                return context.dataset.label + ": " + formatValue(value) + " +/- " + formatValue(err);
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: metricTitle(metric),
+            color: "#111111",
+            font: {
+              family: "Verdana, Geneva, sans-serif",
+              size: 16,
+              weight: "700"
+            },
+            padding: { bottom: 12 }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              minRotation: 45,
+              maxRotation: 45,
+              padding: 4,
+              color: "#222222",
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 13
+              }
+            },
+            grid: {
+              drawOnChartArea: false,
+              drawTicks: false,
+              color: "#222222"
+            },
+            border: {
+              display: true,
+              color: "#222222",
+              width: 1
+            }
+          },
+          y: {
+            min: metric.yMin,
+            max: metric.yMax,
+            ticks: {
+              color: "#222222",
+              maxTicksLimit: 5,
+              callback(value) {
+                return Number(value).toFixed(2);
+              },
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              }
+            },
+            grid: {
+              color: "rgba(0, 0, 0, .18)",
+              borderDash: [4, 4],
+              lineWidth: 1
+            },
+            border: { display: false }
+          }
+        }
+      },
+      plugins: [errorBarPlugin, groupedBarTickPlugin]
+    };
+  }
+
+  function renderInversionMetricsCharts(data) {
+    if (!window.Chart) {
+      throw new Error("Chart.js must be loaded before rendering inversion charts.");
+    }
+
+    target.innerHTML = "";
+    target.classList.add("inversion-chart-root");
+
+    buildLegend(target, data);
+    const canvases = buildCanvasGrid(target, data.metrics);
+
+    canvases.forEach((canvas, index) => {
+      const metric = data.metrics[index];
+      const config = buildChartConfig(metric, data.labels, data.legend);
+      new window.Chart(canvas, config);
+    });
+  }
+
+  fetch("{{ inversion_metrics_json }}")
+    .then((response) => response.json())
+    .then(renderInversionMetricsCharts)
+    .catch((error) => {
+      console.error(error);
+      target.textContent = "Unable to load COCO inversion metrics.";
+    });
+})();
+</script>

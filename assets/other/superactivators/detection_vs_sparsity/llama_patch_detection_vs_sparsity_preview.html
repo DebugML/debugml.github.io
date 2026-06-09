@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compare-Methods Blog Preview</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px 20px 48px;
+        background: #f4f1ea;
+        color: #111111;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      main {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 4vw, 42px);
+      }
+
+      p {
+        margin: 0 0 24px;
+        font-size: 18px;
+        line-height: 1.5;
+        max-width: 980px;
+      }
+
+      .chart-shell {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(17, 17, 17, 0.12);
+        border-radius: 18px;
+        box-shadow: 0 20px 40px rgba(17, 17, 17, 0.08);
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Llama Patch Detection Comparison</h1>
+      <p>
+        Blog-preview version of the Compare-Methods detection plots for COCO,
+        OpenSurfaces, Pascal, iSarcasm, and GoEmotions, rendered natively with
+        Chart.js from the same raw results used to build the paper figures.
+      </p>
+      <div class="chart-shell">
+        <div id="compare-methods-charts"></div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="./llama_patch_detection_vs_sparsity_chart.js"></script>
+    <script>
+      fetch("./llama_patch_detection_vs_sparsity.json")
+        .then((response) => response.json())
+        .then((bundle) => {
+          window.renderCompareMethodsCharts("#compare-methods-charts", bundle);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    </script>
+  </body>
+</html>

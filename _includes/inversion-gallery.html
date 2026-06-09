@@ -1,0 +1,149 @@
+<figure id="inversion-gallery" style="max-width:1200px;margin:1.5rem auto;text-align:center">
+  <div style="font-size:.85rem;color:#666;margin-bottom:.35rem;">
+    Examples — click between qualitative attribution comparisons
+  </div>
+
+  <div id="inversion-gallery-tabs"
+       style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:.8rem;">
+    <button type="button" data-key="person"
+            style="padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;">
+      Img 1
+    </button>
+    <button type="button" data-key="food"
+            style="padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;">
+      Img 2
+    </button>
+    <button type="button" data-key="electronic"
+            style="padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;">
+      Img 3
+    </button>
+    <button type="button" data-key="sarcasm"
+            style="padding:.25rem .6rem;font-size:.9rem;border-radius:999px;border:1px solid #d0d7de;background:#f9fafb;cursor:pointer;font-weight:500;transition:all .15s ease;">
+      Text 1
+    </button>
+  </div>
+
+  <div id="inversion-gallery-content"></div>
+  <figcaption style="margin-top:.45rem;font-size:.9rem;color:#555;">
+    Red indicates high attribution score; blue indicates low attribution score.
+  </figcaption>
+
+  <script>
+  (function(){
+    const root = document.getElementById('inversion-gallery');
+    if (!root) return;
+
+    const tabs = Array.from(root.querySelectorAll('#inversion-gallery-tabs button'));
+    const content = document.getElementById('inversion-gallery-content');
+
+    const entries = {
+      person: {
+        layout: 'image',
+        concept: 'Person',
+        images: [
+          '/assets/images/superactivators/inversions/inversion_ex.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_s.png'
+        ]
+      },
+      food: {
+        layout: 'image',
+        concept: 'Food',
+        images: [
+          '/assets/images/superactivators/inversions/inversion_ex_1.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_1.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_s_1.png'
+        ]
+      },
+      electronic: {
+        layout: 'image',
+        concept: 'Electronic',
+        images: [
+          '/assets/images/superactivators/inversions/inversion_ex_2.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_2.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_s_2.png'
+        ]
+      },
+      sarcasm: {
+        layout: 'text',
+        concept: 'Sarcasm',
+        images: [
+          '/assets/images/superactivators/inversions/inversion_ex3.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_3.png',
+          '/assets/images/superactivators/inversions/inversion_ex_p_s_3.png'
+        ]
+      }
+    };
+
+    function highlight(activeKey) {
+      tabs.forEach(tab => {
+        const isActive = tab.dataset.key === activeKey;
+        tab.style.background = isActive ? '#eef2ff' : '#f9fafb';
+        tab.style.fontWeight = isActive ? '600' : '500';
+      });
+    }
+
+    function conceptLabel(concept) {
+      return '<span style="display:inline-flex;align-items:center;gap:.22rem;border:1px solid #c7b79f;border-radius:.3rem;padding:.14rem .28rem;background:#efe4cf;">Concept&nbsp;<span style="background:#fff200;padding:.02rem .08rem;display:inline-block;"><em>' +
+        concept +
+        '</em></span></span>';
+    }
+
+    function renderImageEntry(entry) {
+      return `
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:.8rem;row-gap:0;align-items:end;">
+          <div style="font-size:.92rem;font-weight:700;line-height:1;color:#15284a;margin:0 0 .34rem 0;justify-self:start;text-align:left;">${conceptLabel(entry.concept)}</div>
+          <div></div>
+          <div></div>
+
+          <div style="font-size:.9rem;font-weight:400;line-height:1;color:#15284a;margin:0 0 .18rem 0;text-align:right;text-decoration:underline;">Attribution Target:</div>
+          <div style="font-size:.9rem;font-weight:400;line-height:1;color:#15284a;margin:0 0 .18rem 0;">Concept Vector</div>
+          <div style="font-size:.9rem;font-weight:400;line-height:1;color:#15284a;margin:0 0 .18rem 0;">SuperActivators</div>
+
+          <div style="display:flex;align-items:flex-end;justify-content:center;">
+            <img src="${entry.images[0]}" alt="${entry.concept} labeled" style="display:block;max-width:100%;max-height:180px;width:auto;height:auto;margin:0 auto;">
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:center;">
+            <img src="${entry.images[1]}" alt="${entry.concept} concept vector attribution" style="display:block;max-width:100%;max-height:180px;width:auto;height:auto;margin:0 auto;">
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:center;">
+            <img src="${entry.images[2]}" alt="${entry.concept} SuperActivators attribution" style="display:block;max-width:100%;max-height:180px;width:auto;height:auto;margin:0 auto;">
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTextEntry(entry) {
+      return `
+        <div style="display:flex;flex-direction:column;gap:.2rem;">
+          <div style="display:flex;flex-direction:column;gap:.22rem;">
+            <div style="font-size:.92rem;font-weight:700;line-height:1;color:#15284a;align-self:flex-start;text-align:left;">${conceptLabel(entry.concept)}</div>
+            <img src="${entry.images[0]}" alt="${entry.concept} labeled" style="display:block;width:100%;height:auto;margin:0 auto;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.14rem;">
+            <div style="font-size:.92rem;font-weight:400;line-height:1;color:#15284a;"><span style="text-decoration:underline;">Attribution Target:</span> Concept Vector</div>
+            <img src="${entry.images[1]}" alt="${entry.concept} concept vector attribution" style="display:block;width:100%;height:auto;margin:0 auto;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.14rem;">
+            <div style="font-size:.92rem;font-weight:400;line-height:1;color:#15284a;"><span style="text-decoration:underline;">Attribution Target:</span> SuperActivators</div>
+            <img src="${entry.images[2]}" alt="${entry.concept} SuperActivators attribution" style="display:block;width:100%;height:auto;margin:0 auto;">
+          </div>
+        </div>
+      `;
+    }
+
+    function render(key) {
+      const entry = entries[key];
+      if (!entry) return;
+      content.innerHTML = entry.layout === 'text' ? renderTextEntry(entry) : renderImageEntry(entry);
+      highlight(key);
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => render(tab.dataset.key));
+    });
+
+    render('person');
+  })();
+  </script>
+</figure>

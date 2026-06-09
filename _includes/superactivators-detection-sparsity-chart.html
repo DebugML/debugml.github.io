@@ -1,0 +1,405 @@
+{% assign detection_sparsity_json = "/assets/other/superactivators/detection_vs_sparsity/llama_patch_detection_vs_sparsity.json" | relative_url %}
+<figure id="detection-v-sparsity" style="max-width:1000px;margin:1.5rem auto;text-align:center">
+  <div style="font-size:.85rem;color:#666;margin-bottom:.35rem;">
+    Datasets &mdash; click between plots
+  </div>
+
+  <div class="dvs-tabs" role="tablist" aria-label="Detection vs sparsity datasets"></div>
+
+  <div class="dvs-shell">
+    <div class="dvs-legend" aria-label="Detection methods"></div>
+    <div class="dvs-panel">
+      <canvas id="detection-v-sparsity-canvas"
+              aria-label="Average detection F1 across concepts vs sparsity"
+              role="img"></canvas>
+    </div>
+  </div>
+
+  <figcaption style="margin-top:.6rem;font-size:.95rem;color:#555;line-height:1.4;">
+    Average detection F1 across concepts vs sparsity &delta; for LLaMA-3.2-11B-Vision-Instruct concepts; <strong>performance peaks at very low &delta;</strong>
+  </figcaption>
+</figure>
+
+<style>
+  #detection-v-sparsity .dvs-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    justify-content: center;
+    margin-bottom: .9rem;
+  }
+  #detection-v-sparsity .dvs-tab {
+    padding: .25rem .6rem;
+    font-size: .9rem;
+    border-radius: 999px;
+    border: 1px solid #d0d7de;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all .15s ease;
+  }
+  #detection-v-sparsity .dvs-tab[aria-selected="true"] {
+    background: #eef2ff;
+    font-weight: 600;
+  }
+  #detection-v-sparsity .dvs-shell {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: .75rem;
+    align-items: start;
+  }
+  #detection-v-sparsity .dvs-legend {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: .55rem;
+    margin: 0;
+    padding: .55rem .65rem;
+    border: 1px solid #d0d7de;
+    border-radius: .35rem;
+    background: transparent;
+    font: 600 14px Verdana, Geneva, sans-serif;
+    color: #111111;
+  }
+  #detection-v-sparsity .dvs-legend-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: .1rem;
+  }
+  #detection-v-sparsity .dvs-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    white-space: nowrap;
+  }
+  #detection-v-sparsity .dvs-legend-line {
+    width: 24px;
+    border-top-width: 3px;
+    border-top-style: solid;
+    transform: translateY(-1px);
+  }
+  #detection-v-sparsity .dvs-panel {
+    height: 300px;
+    min-width: 0;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  @media (max-width: 760px) {
+    #detection-v-sparsity .dvs-shell {
+      grid-template-columns: 1fr;
+      padding: 0;
+    }
+    #detection-v-sparsity .dvs-legend {
+      grid-row: 1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto .35rem;
+    }
+    #detection-v-sparsity .dvs-legend-title {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 0;
+    }
+    #detection-v-sparsity .dvs-panel {
+      grid-row: 2;
+      height: 265px;
+    }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const root = document.getElementById("detection-v-sparsity");
+  if (!root) return;
+
+  const tabsRoot = root.querySelector(".dvs-tabs");
+  const legendRoot = root.querySelector(".dvs-legend");
+  const canvas = document.getElementById("detection-v-sparsity-canvas");
+  let activeChart = null;
+  let bundleData = null;
+
+  function xTickLabel(value) {
+    const rounded = Math.round(Number(value) * 100);
+    return [10, 30, 50, 70, 90].includes(rounded) ? rounded + "%" : "";
+  }
+
+  function yTickLabel(value, yMax) {
+    const scaled = Math.round(Number(value) * 10);
+    return scaled > 0 && scaled % 2 === 0 ? formatYTick(value, yMax) : "";
+  }
+
+  function formatYTick(value, yMax) {
+    return Number(value).toFixed(1);
+  }
+
+  function labeledTickPlugin(chartData) {
+    function drawLabeledGridLines(chart) {
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const area = chart.chartArea;
+
+      chart.ctx.save();
+      chart.ctx.strokeStyle = "rgba(0, 0, 0, .18)";
+      chart.ctx.lineWidth = 1;
+      chart.ctx.setLineDash([4, 4]);
+      chart.ctx.beginPath();
+
+      xScale.ticks.forEach((tick) => {
+        if (!xTickLabel(tick.value)) return;
+        const x = xScale.getPixelForValue(tick.value);
+        chart.ctx.moveTo(x, area.top);
+        chart.ctx.lineTo(x, area.bottom);
+      });
+
+      yScale.ticks.forEach((tick) => {
+        if (!yTickLabel(tick.value, chartData.yMax)) return;
+        const y = yScale.getPixelForValue(tick.value);
+        chart.ctx.moveTo(area.left, y);
+        chart.ctx.lineTo(area.right, y);
+      });
+
+      chart.ctx.stroke();
+      chart.ctx.restore();
+    }
+
+    function drawLabeledTickMarks(chart) {
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const length = 6;
+
+      chart.ctx.save();
+      chart.ctx.strokeStyle = "#222222";
+      chart.ctx.lineWidth = 1;
+      chart.ctx.beginPath();
+
+      xScale.ticks.forEach((tick) => {
+        if (!xTickLabel(tick.value)) return;
+        const x = xScale.getPixelForValue(tick.value);
+        chart.ctx.moveTo(x, xScale.top);
+        chart.ctx.lineTo(x, xScale.top + length);
+      });
+
+      yScale.ticks.forEach((tick) => {
+        if (!yTickLabel(tick.value, chartData.yMax)) return;
+        const y = yScale.getPixelForValue(tick.value);
+        chart.ctx.moveTo(yScale.right - length, y);
+        chart.ctx.lineTo(yScale.right, y);
+      });
+
+      chart.ctx.stroke();
+      chart.ctx.restore();
+    }
+
+    return {
+      id: "dvsLabeledGridAndTicks",
+      beforeDatasetsDraw: drawLabeledGridLines,
+      afterDraw: drawLabeledTickMarks
+    };
+  }
+
+  function buildLegend(chartData) {
+    legendRoot.innerHTML = "";
+
+    const title = document.createElement("div");
+    title.className = "dvs-legend-title";
+    title.textContent = "Concept Type";
+    legendRoot.appendChild(title);
+
+    chartData.series.forEach((series) => {
+      const item = document.createElement("div");
+      item.className = "dvs-legend-item";
+
+      const line = document.createElement("span");
+      line.className = "dvs-legend-line";
+      line.style.borderTopColor = series.color;
+      if (series.borderDash && series.borderDash.length) {
+        line.style.borderTopStyle = "dashed";
+      }
+
+      const label = document.createElement("span");
+      label.textContent = series.label;
+
+      item.appendChild(line);
+      item.appendChild(label);
+      legendRoot.appendChild(item);
+    });
+  }
+
+  function buildConfig(chartData) {
+    return {
+      type: "line",
+      data: {
+        datasets: chartData.series.map((series) => ({
+          label: series.label,
+          data: series.points,
+          parsing: false,
+          borderColor: series.color,
+          backgroundColor: series.color,
+          borderWidth: 3.25,
+          borderDash: series.borderDash || [],
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHitRadius: 10,
+          tension: 0,
+          fill: false
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: "Detection vs \u03b4",
+            color: "#111111",
+            font: {
+              family: "Verdana, Geneva, sans-serif",
+              size: 18,
+              weight: "700"
+            },
+            padding: { bottom: 8 }
+          },
+          tooltip: {
+            callbacks: {
+              label(context) {
+                return context.dataset.label + ": " + Number(context.parsed.y).toFixed(3);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: "linear",
+            min: 0,
+            max: 1,
+            ticks: {
+              stepSize: .1,
+              minRotation: 25,
+              maxRotation: 25,
+              color: "#222222",
+              callback: xTickLabel,
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 12
+              }
+            },
+            title: {
+              display: true,
+              text: "Sparsity Level (\u03b4)",
+              color: "#222222",
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 13,
+                weight: "600"
+              }
+            },
+            grid: {
+              drawOnChartArea: false,
+              drawTicks: false,
+              color: "#222222"
+            },
+            border: {
+              display: true,
+              color: "#222222",
+              width: 1
+            }
+          },
+          y: {
+            min: chartData.yMin,
+            max: chartData.yMax,
+            ticks: {
+              color: "#222222",
+              padding: 8,
+              stepSize: .2,
+              callback(value) {
+                return yTickLabel(value, chartData.yMax);
+              },
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              }
+            },
+            title: {
+              display: true,
+              text: "Avg Detection F1",
+              color: "#222222",
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 13,
+                weight: "600"
+              }
+            },
+            grid: {
+              drawOnChartArea: false,
+              drawTicks: false
+            },
+            border: {
+              display: true,
+              color: "#222222",
+              width: 1
+            }
+          }
+        }
+      }
+    };
+  }
+
+  function highlightTab(index) {
+    Array.from(tabsRoot.querySelectorAll("button")).forEach((button, buttonIndex) => {
+      button.setAttribute("aria-selected", buttonIndex === index ? "true" : "false");
+    });
+  }
+
+  function renderDataset(index) {
+    if (!bundleData || !bundleData.charts[index] || !window.Chart) return;
+
+    const chartData = bundleData.charts[index];
+    if (activeChart) {
+      activeChart.destroy();
+    }
+
+    buildLegend(chartData);
+    const config = buildConfig(chartData);
+    config.plugins = [labeledTickPlugin(chartData)];
+    activeChart = new window.Chart(canvas, config);
+    highlightTab(index);
+  }
+
+  function buildTabs(charts) {
+    tabsRoot.innerHTML = "";
+    charts.forEach((chartData, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "dvs-tab";
+      button.textContent = chartData.displayName || chartData.datasetKey;
+      button.setAttribute("aria-selected", "false");
+      button.addEventListener("click", () => renderDataset(index));
+      tabsRoot.appendChild(button);
+    });
+  }
+
+  fetch("{{ detection_sparsity_json }}")
+    .then((response) => response.json())
+    .then((bundle) => {
+      bundleData = bundle;
+      buildTabs(bundle.charts || []);
+      renderDataset(0);
+    })
+    .catch((error) => {
+      console.error(error);
+      root.querySelector(".dvs-shell").textContent = "Unable to load detection vs sparsity data.";
+    });
+})();
+</script>
